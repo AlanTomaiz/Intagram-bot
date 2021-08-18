@@ -1,0 +1,22 @@
+import { Request, Response, NextFunction } from 'express';
+import RequestError from '../errors/request-error';
+
+const HandleError = (
+  err: Error,
+  req: Request,
+  res: Response,
+  _: NextFunction,
+) => {
+  if (err instanceof RequestError) {
+    const message =
+      err.message || 'Erro ao executar esta operação, tente novamente.';
+
+    return res.status(err.statusCode).json({ status: 'error', message });
+  }
+
+  return res
+    .status(500)
+    .json({ status: 'error', message: 'Internal server error' });
+};
+
+export default HandleError;

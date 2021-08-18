@@ -18,6 +18,7 @@
         "@typescript-eslint"
     ],
     "rules": {
+        "import/prefer-default-export": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "prettier/prettier": "error",
         "import/extensions": [
