@@ -11,7 +11,7 @@ export default class OldAccountsRepository extends Repository<OldAccounts> {
     query.select('old');
     query.leftJoin(Account, 'account', 'old.username != account.account_user');
     query.where('old.status < 3');
-    query.limit(100);
+    query.limit(500);
 
     const result = await query.getMany();
     return result;
