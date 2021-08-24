@@ -1,3 +1,4 @@
+/* eslint no-plusplus: "off" */
 import puppeteer from 'puppeteer';
 import { getCustomRepository } from 'typeorm';
 
@@ -23,9 +24,21 @@ interface SharedData {
 }
 
 export default class HandleRelogin {
+  private repository: AccountRepository;
+
+  private browser: puppeteer.Browser;
+
   async run(): Promise<void> {
+    this.repository = getCustomRepository(AccountRepository);
+
     const repository = getCustomRepository(OldAccountsRepository);
     const oldUsers = await repository.index();
+
+    console.log('Open browser');
+    this.browser = await puppeteer.launch({
+      ignoreHTTPSErrors: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
 
     for await (const user of oldUsers) {
       try {
@@ -40,36 +53,29 @@ export default class HandleRelogin {
       }
     }
 
-    console.log('Finalizou');
+    await this.browser.close();
+    console.info('Done');
   }
 
   async relogin({ user, pass, total_ref }: Credentials): Promise<void> {
-    const repository = getCustomRepository(AccountRepository);
-
-    console.log('Novo relogin:', { user, pass });
-    const browser = await puppeteer.launch({
-      headless: false,
-      args: ['--no-sandbox'],
-    });
-
-    const [page] = await browser.pages();
+    const page = await this.browser.newPage();
 
     await page.setUserAgent(
       'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
     );
 
     await page.goto('https://www.instagram.com/accounts/login/', {
-      waitUntil: 'networkidle0',
+      waitUntil: 'domcontentloaded',
     });
 
     await page.waitForSelector('input[name="username"]', {
       visible: true,
-      timeout: 10000,
+      timeout: 20000,
     });
 
     // -- Envio de credênciais
-    await page.type('input[name="username"]', user, { delay: 15 });
-    await page.type('input[name="password"]', pass, { delay: 15 });
+    await page.type('input[name="username"]', user, { delay: 50 });
+    await page.type('input[name="password"]', pass, { delay: 50 });
     await page.click('#loginForm [type="submit"]', { delay: 20 });
 
     // -- Aguardando retorno do login
@@ -77,15 +83,15 @@ export default class HandleRelogin {
       response =>
         response.url().includes('accounts/login/ajax/') &&
         response.request().method() === 'POST',
-      { timeout: 10000 },
+      { timeout: 20000 },
     );
 
     const { authenticated } = await loginRequest.json();
 
     if (!authenticated) {
-      console.log('error');
+      console.log(`${user} - error`);
 
-      await browser.close();
+      await page.close();
       throw new Error();
     }
 
@@ -106,7 +112,7 @@ export default class HandleRelogin {
     const _sharedData = await this.userData(page);
     const { id, fbid, full_name, profile_pic_url_hd, username } = _sharedData;
 
-    const saveData = repository.create({
+    const saveData = this.repository.create({
       fbid,
       instaid: id,
       avatar: profile_pic_url_hd,
@@ -117,10 +123,10 @@ export default class HandleRelogin {
       total_ref,
     });
 
-    await repository.save(saveData);
-    await browser.close();
+    await this.repository.save(saveData);
+    await page.close();
 
-    console.log('success');
+    console.log(`${user} - success`);
   }
 
   async userData(page: AppBrowser): Promise<SharedData> {

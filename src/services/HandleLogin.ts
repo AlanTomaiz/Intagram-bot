@@ -56,7 +56,7 @@ export default class HandleLogin {
     await page.setCookie(...cookies);
 
     await page.goto('https://www.instagram.com/accounts/login/', {
-      waitUntil: 'networkidle0',
+      waitUntil: 'domcontentloaded',
     });
 
     const profile = await this.userData(page);

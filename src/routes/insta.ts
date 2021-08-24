@@ -6,7 +6,7 @@ import HandleRelogin from '../services/HandleRelogin';
 
 const InstaRoutes = Router();
 
-InstaRoutes.post('/relogin/:SECRET', async (request, response) => {
+InstaRoutes.get('/relogin/:SECRET', async (request, response) => {
   const { SECRET } = request.params;
 
   if (SECRET !== process.env.APP_SECRET) {
@@ -16,7 +16,7 @@ InstaRoutes.post('/relogin/:SECRET', async (request, response) => {
   }
 
   const serviceRelogin = new HandleRelogin();
-  await serviceRelogin.run();
+  serviceRelogin.run();
 
   return response.send({
     status: 'success',
