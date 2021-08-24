@@ -16,9 +16,7 @@ InstaRoutes.post('/relogin/:SECRET', async (request, response) => {
   }
 
   const serviceRelogin = new HandleRelogin();
-  const oldUsers = await serviceRelogin.run();
-
-  return response.json(oldUsers);
+  await serviceRelogin.run();
 
   return response.send({
     status: 'success',

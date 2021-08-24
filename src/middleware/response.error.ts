@@ -19,6 +19,8 @@ const HandleError = (
     return res.status(err.statusCode).json(err.response);
   }
 
+  console.log(err);
+
   return res
     .status(500)
     .json({ status: 'error', message: 'Internal server error' });
