@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import RequestError from '../errors/request-error';
 import HandleLogin from '../services/HandleLogin';
+import HandleRelogin from '../services/HandleRelogin';
 
 const InstaRoutes = Router();
 
@@ -13,6 +14,11 @@ InstaRoutes.post('/relogin/:SECRET', async (request, response) => {
       'Você não tem permissão para executar esta operação.',
     );
   }
+
+  const serviceRelogin = new HandleRelogin();
+  const oldUsers = await serviceRelogin.run();
+
+  return response.json(oldUsers);
 
   return response.send({
     status: 'success',

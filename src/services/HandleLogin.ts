@@ -1,4 +1,3 @@
-/* eslint class-methods-use-this: "off", camelcase: "off" */
 import puppeteer from 'puppeteer';
 import { slug, log, getCookies, saveCookies } from '../utils/handleFiles';
 

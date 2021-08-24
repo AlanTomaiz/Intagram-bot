@@ -1,5 +1,9 @@
+import 'reflect-metadata';
+import 'dotenv/config';
+
 import express from 'express';
 import 'express-async-errors';
+import './database';
 
 import HandleError from './middleware/response.error';
 import InstaRoutes from './routes/insta';
