@@ -1,6 +1,7 @@
 /* eslint no-plusplus: "off" */
-import puppeteer from 'puppeteer';
 import { getCustomRepository } from 'typeorm';
+import puppeteer from 'puppeteer';
+import path from 'path';
 
 import AccountRepository from '../repositories/AccountRepository';
 import OldAccountsRepository from '../repositories/OldAccountRepository';
@@ -90,6 +91,9 @@ export default class HandleRelogin {
 
     if (!authenticated) {
       console.log(`${user} - error`);
+
+      const directory = path.resolve('..', '..', `erros/error-${user}.png`);
+      await page.screenshot({ path: directory });
 
       await page.close();
       throw new Error();
