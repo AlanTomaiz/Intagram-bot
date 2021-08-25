@@ -37,8 +37,9 @@ export default class HandleRelogin {
 
     console.log('Open browser');
     this.browser = await puppeteer.launch({
-      ignoreHTTPSErrors: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      // ignoreHTTPSErrors: true,
+      // headless: false,
+      args: ['--no-sandbox'],
     });
 
     for await (const user of oldUsers) {
@@ -48,7 +49,7 @@ export default class HandleRelogin {
           pass: user.password,
           total_ref: user.total_ref,
         });
-      } catch {
+      } catch (error) {
         user.status = 3;
         await repository.save(user);
       }
@@ -77,14 +78,14 @@ export default class HandleRelogin {
     // -- Envio de credênciais
     await page.type('input[name="username"]', user, { delay: 50 });
     await page.type('input[name="password"]', pass, { delay: 50 });
-    await page.click('#loginForm [type="submit"]', { delay: 20 });
+    await page.click('#loginForm [type="submit"]', { delay: 50 });
 
     // -- Aguardando retorno do login
     const loginRequest = await page.waitForResponse(
       response =>
         response.url().includes('accounts/login/ajax/') &&
         response.request().method() === 'POST',
-      { timeout: 20000 },
+      // { timeout: 20000 },
     );
 
     const { authenticated } = await loginRequest.json();
@@ -92,7 +93,7 @@ export default class HandleRelogin {
     if (!authenticated) {
       console.log(`${user} - error`);
 
-      const directory = path.resolve('..', '..', `erros/error-${user}.png`);
+      const directory = path.resolve(`erros/error-${user}.png`);
       await page.screenshot({ path: directory });
 
       await page.close();
