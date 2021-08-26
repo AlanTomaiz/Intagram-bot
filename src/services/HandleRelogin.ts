@@ -173,11 +173,11 @@ export default class HandleRelogin {
     }
 
     if (!authenticated) {
-      log(JSON.stringify(loginResponse));
+      log(JSON.stringify({ ...loginResponse, user }));
       await page.screenshot({ path: `temp/${user}.png` });
 
       await page.close();
-      throw new Error(`${user} - error`);
+      return;
     }
 
     /**
