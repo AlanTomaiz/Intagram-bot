@@ -1,12 +1,14 @@
 /* eslint no-plusplus: "off" */
 import { getCustomRepository } from 'typeorm';
+import promisify from 'promisify-node';
+import phpRunner from 'child_process';
 import puppeteer from 'puppeteer';
-import path from 'path';
+import useProxy from 'puppeteer-page-proxy';
 
 import AccountRepository from '../repositories/AccountRepository';
 import OldAccountsRepository from '../repositories/OldAccountRepository';
 
-import { saveCookies } from '../utils/handleFiles';
+import { log, saveCookies } from '../utils/handleFiles';
 
 type AppBrowser = puppeteer.Page;
 
@@ -14,6 +16,12 @@ interface Credentials {
   user: string;
   pass: string;
   total_ref: number;
+  proxy_port: number;
+}
+
+interface ProxyList {
+  ip: string;
+  port: number;
 }
 
 interface SharedData {
@@ -29,45 +37,97 @@ export default class HandleRelogin {
 
   private browser: puppeteer.Browser;
 
+  private proxy: ProxyList[];
+
+  private data: Credentials;
+
   async run(): Promise<void> {
     this.repository = getCustomRepository(AccountRepository);
 
     const repository = getCustomRepository(OldAccountsRepository);
     const oldUsers = await repository.index();
 
+    // Proxy
+    const execPHP = promisify(phpRunner.exec);
+    const ipProxy = await execPHP('php script.php addIpv6');
+    this.proxy = JSON.parse(ipProxy);
+
     console.log('Open browser');
     this.browser = await puppeteer.launch({
-      // ignoreHTTPSErrors: true,
       // headless: false,
       args: ['--no-sandbox'],
     });
 
-    for await (const user of oldUsers) {
+    for await (const [index, user] of oldUsers.entries()) {
       try {
-        await this.relogin({
+        // await this.testConnection(this.proxy[index].port);
+
+        this.data = {
           user: user.username,
           pass: user.password,
           total_ref: user.total_ref,
-        });
+          proxy_port: this.proxy[index].port,
+        };
+
+        await this.relogin();
       } catch (error) {
+        log(error.message);
+
         user.status = 3;
         await repository.save(user);
       }
     }
 
+    for await (const item of this.proxy) {
+      await execPHP(`php script.php rmIpv6,${item.ip}`);
+    }
+
+    await execPHP('php script.php restartSquid');
     await this.browser.close();
     console.info('Done');
   }
 
-  async relogin({ user, pass, total_ref }: Credentials): Promise<void> {
+  // async testConnection(port: number): Promise<void> {
+  //   const page = await this.browser.newPage();
+  //   await useProxy(page, `http://localhost:${port}`);
+
+  //   await page.setUserAgent(
+  //     'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
+  //   );
+
+  //   await page.goto('https://whatismyv6.com/', {
+  //     waitUntil: 'domcontentloaded',
+  //     timeout: 20000,
+  //   });
+
+  //   await page.screenshot({
+  //     path: `prints/whatismyv6-${Math.floor(Math.random() * 142436460)}.png`,
+  //   });
+
+  //   await page.close();
+  // }
+
+  async userData(page: AppBrowser): Promise<SharedData> {
+    const pageData = await page.evaluate(
+      () => window._sharedData.config.viewer,
+    );
+
+    return pageData;
+  }
+
+  async relogin(): Promise<void> {
+    const { user, pass, total_ref, proxy_port } = this.data;
+
     const page = await this.browser.newPage();
+    await useProxy(page, `http://localhost:${proxy_port}`);
 
     await page.setUserAgent(
       'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36',
     );
 
-    await page.goto('https://www.instagram.com/accounts/login/', {
+    await page.goto('https://www.instagram.com/', {
       waitUntil: 'domcontentloaded',
+      timeout: 20000,
     });
 
     await page.waitForSelector('input[name="username"]', {
@@ -85,19 +145,39 @@ export default class HandleRelogin {
       response =>
         response.url().includes('accounts/login/ajax/') &&
         response.request().method() === 'POST',
-      // { timeout: 20000 },
+      { timeout: 20000 },
     );
 
-    const { authenticated } = await loginRequest.json();
+    const loginResponse = await loginRequest.json();
+    const { authenticated } = loginResponse;
 
-    if (!authenticated) {
-      console.log(`${user} - error`);
+    try {
+      await page.waitForSelector('#slfErrorAlert', {
+        visible: true,
+        timeout: 20000,
+      });
+    } catch {
+      // ignora erro caso tenha logado
+    }
 
-      const directory = path.resolve(`erros/error-${user}.png`);
-      await page.screenshot({ path: directory });
+    const errorMessage = await page.evaluate(
+      () => document.getElementById('slfErrorAlert')?.innerHTML,
+    );
+
+    if (errorMessage?.includes('internet')) {
+      console.log('Erro de internet', loginResponse);
+      await page.screenshot({ path: `erros/internet-${user}.png` });
 
       await page.close();
-      throw new Error();
+      return;
+    }
+
+    if (!authenticated) {
+      log(JSON.stringify(loginResponse));
+      await page.screenshot({ path: `erros/${user}.png` });
+
+      await page.close();
+      throw new Error(`${user} - error`);
     }
 
     /**
@@ -132,13 +212,5 @@ export default class HandleRelogin {
     await page.close();
 
     console.log(`${user} - success`);
-  }
-
-  async userData(page: AppBrowser): Promise<SharedData> {
-    const pageData = await page.evaluate(
-      () => window._sharedData.config.viewer,
-    );
-
-    return pageData;
   }
 }
