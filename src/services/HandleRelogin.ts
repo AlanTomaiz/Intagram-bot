@@ -166,7 +166,7 @@ export default class HandleRelogin {
 
     if (errorMessage?.includes('internet')) {
       console.log('Erro de internet', loginResponse);
-      await page.screenshot({ path: `erros/internet-${user}.png` });
+      await page.screenshot({ path: `temp/internet-${user}.png` });
 
       await page.close();
       return;
@@ -174,7 +174,7 @@ export default class HandleRelogin {
 
     if (!authenticated) {
       log(JSON.stringify(loginResponse));
-      await page.screenshot({ path: `erros/${user}.png` });
+      await page.screenshot({ path: `temp/${user}.png` });
 
       await page.close();
       throw new Error(`${user} - error`);
