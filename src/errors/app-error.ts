@@ -1,7 +1,8 @@
 interface Data {
-  success: boolean;
-  checkpoint: boolean;
-  message: string;
+  success?: boolean;
+  checkpoint?: boolean;
+  message?: string;
+  status?: string;
 }
 
 export default class AppError {
@@ -9,7 +10,7 @@ export default class AppError {
 
   public readonly statusCode;
 
-  constructor(data: Data, statusCode = 400) {
+  constructor(data: Data | string, statusCode = 400) {
     this.response = data;
     this.statusCode = statusCode;
   }

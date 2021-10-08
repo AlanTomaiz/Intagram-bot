@@ -6,15 +6,7 @@ import HandleRelogin from '../services/HandleRelogin';
 
 const InstaRoutes = Router();
 
-InstaRoutes.get('/relogin/:SECRET', async (request, response) => {
-  const { SECRET } = request.params;
-
-  if (SECRET !== process.env.APP_SECRET) {
-    throw new RequestError(
-      'Você não tem permissão para executar esta operação.',
-    );
-  }
-
+InstaRoutes.get('/relogin/', async (request, response) => {
   const serviceRelogin = new HandleRelogin();
   serviceRelogin.run();
 
