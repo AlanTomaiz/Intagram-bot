@@ -3,9 +3,15 @@ import AppError from '../errors/app-error';
 import { initBrowser, initInstagram } from './browser';
 import { Credentials } from '../config/types';
 import { logger } from '../utils/logger';
+import { puppeteerConfig } from '../config/puppeteer.config';
 
 export async function create(credentials: Credentials) {
-  const browser = await initBrowser();
+  const browserConfigs = [
+    ...puppeteerConfig,
+    // `--proxy-server=http://localhost:${proxy_port}`,
+  ];
+
+  const browser = await initBrowser(browserConfigs);
   logger.info(`Initializing browser...`);
 
   if (!browser) {

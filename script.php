@@ -6,10 +6,10 @@ function randomIpv6() {
 }
 
 // Adiciona o ip a interface do server
-function addIpv6() {
+function addIpv6($quant = 200) {
   $ipList = [];
 
-  while (count($ipList) <= 200) {
+  while (count($ipList) < $quant) {
     $ip = randomIpv6();
     $ipList[] = $ip;
 

@@ -5,9 +5,18 @@ import OldAccountsRepository from '../repositories/OldAccountRepository';
 
 import { create } from '../controllers/initializer';
 import { makeQuery } from '../controllers/mysql';
+import { TestConnection } from '../controllers/connection';
+import { logger } from '../utils/logger';
 
 export default class HandleRelogin {
   async run(): Promise<void> {
+    await TestConnection();
+
+    logger.info('Start proccess relogin.');
+    // this.start();
+  }
+
+  async start(): Promise<void> {
     const manager = getManager();
     const userRepository = getCustomRepository(AccountRepository);
 

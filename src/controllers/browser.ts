@@ -2,17 +2,18 @@ import { Browser, Page } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
-import { puppeteerConfig } from '../config/puppeteer.config';
 import { injectCookies } from './auth';
 
-export async function initBrowser(): Promise<Browser | undefined> {
+export async function initBrowser(
+  configs: Array<string>,
+): Promise<Browser | undefined> {
   puppeteer.use(StealthPlugin());
 
   let browser;
   await puppeteer
     .launch({
       headless: false,
-      args: puppeteerConfig,
+      args: [...configs],
     })
     .then(event => {
       browser = event;
