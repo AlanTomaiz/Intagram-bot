@@ -1,5 +1,5 @@
 /* eslint no-plusplus: "off" */
-import { getCustomRepository } from 'typeorm';
+import { getCustomRepository, getManager } from 'typeorm';
 import phpRunner from 'child_process';
 import promisify from 'promisify-node';
 
@@ -47,6 +47,12 @@ export default class HandleRelogin {
         }
 
         if (response.fbid) {
+          const manager = getManager();
+
+          await manager.query(
+            'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 1;',
+          );
+
           logger.info(`${user.username}:${user.password} - SUCCESS`);
           const { id, fbid, full_name, profile_pic_url_hd, username } =
             response;
@@ -69,6 +75,7 @@ export default class HandleRelogin {
       }
 
       await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
+      console.log('');
     }
 
     // Finalizar prox

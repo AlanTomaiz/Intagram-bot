@@ -64,6 +64,7 @@ export async function initInstagram(
       path: `temp/erro-page-${new Date().getTime()}.png`,
     });
 
+    browser.close();
     return false;
   }
 }
