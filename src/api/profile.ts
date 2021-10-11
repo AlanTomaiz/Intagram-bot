@@ -24,7 +24,7 @@ export default class Profile {
     }
 
     if (status === 'CONNECTED') {
-      await this.page.waitForNavigation();
+      await this.page.waitForTimeout(500);
 
       await saveCookies(this.page, this.credentials.username);
       return { status, success: true, message: `Login with success!` };
