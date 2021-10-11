@@ -29,7 +29,7 @@ export default class HandleRelogin {
 
     // Configuração de prox
     const execPHP = promisify(phpRunner.exec);
-    const ipProxy = await execPHP('php script.php addIpv6,1');
+    const ipProxy = await execPHP('php script.php addIpv6,100');
     const proxy = JSON.parse(ipProxy);
     let count = 0;
 
@@ -40,15 +40,12 @@ export default class HandleRelogin {
       const response = await create(user, currentProxy);
 
       if (!response.success) {
-        const query = await makeQuery(response);
-        console.log(query);
-        console.log(response.status);
-        //   await manager.query(query);
+        const query = await makeQuery({ ...response, ...user });
+        await manager.query(query);
 
-        //   logData(`
-        // ${user.username}:${user.password}
-        // ${response}
-        //         `);
+        logData(`
+        ${user.username}:${user.password}
+        ${response}`);
       }
 
       if (response.fbid) {
@@ -68,10 +65,7 @@ export default class HandleRelogin {
         await userRepository.save(saveData);
       }
 
-      console.log('CHEGA AQUI COMO DEVE');
       await execPHP(`php script.php rmIpv6,${proxy.ip}`);
-
-      throw new Error('teste');
     }
 
     // Finalizar prox

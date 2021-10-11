@@ -17,7 +17,7 @@ app.get('/', (request, response) => {
   return response.send({ message: 'Hello World' });
 });
 
-app.use('/', InstaRoutes);
+app.use(InstaRoutes);
 app.use(HandleError);
 
 app.listen(PORT, () => console.log(`# Server start on port: ${PORT}`));

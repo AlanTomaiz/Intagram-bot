@@ -1,6 +1,5 @@
 import { Router } from 'express';
 
-import RequestError from '../errors/request-error';
 import HandleLogin from '../services/HandleLogin';
 import HandleRelogin from '../services/HandleRelogin';
 
@@ -8,7 +7,7 @@ const InstaRoutes = Router();
 
 InstaRoutes.get('/relogin/', async (request, response) => {
   const serviceRelogin = new HandleRelogin();
-  serviceRelogin.run();
+  await serviceRelogin.run();
 
   return response.send({
     status: 'success',
