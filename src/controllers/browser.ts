@@ -9,17 +9,10 @@ export async function initBrowser(
 ): Promise<Browser | undefined> {
   puppeteer.use(StealthPlugin());
 
-  let browser;
-  await puppeteer
-    .launch({
-      // headless: false,
-      args: [...configs],
-    })
-    .then(event => {
-      browser = event;
-    });
-
-  return browser;
+  return puppeteer.launch({
+    // headless: false,
+    args: [...configs],
+  });
 }
 
 export async function getPage(browser: Browser): Promise<Page> {
