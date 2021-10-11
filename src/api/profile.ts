@@ -21,10 +21,11 @@ export default class Profile {
 
     if (status === 'DISCONNECTED') {
       status = await this.waitForLogin();
-      await this.page.waitForNavigation();
     }
 
     if (status === 'CONNECTED') {
+      await this.page.waitForNavigation();
+
       await saveCookies(this.page, this.credentials.username);
       return { status, success: true, message: `Login with success!` };
     }
@@ -116,7 +117,7 @@ export default class Profile {
       return 'CHECKPOINT';
     }
 
-    console.log(request);
+    console.log('waitForLogin request', request);
     return 'FINAL_LOGIN';
   }
 }
