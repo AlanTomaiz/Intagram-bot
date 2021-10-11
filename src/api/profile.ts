@@ -21,6 +21,7 @@ export default class Profile {
 
     if (status === 'DISCONNECTED') {
       status = await this.waitForLogin();
+      await this.page.waitForNavigation();
     }
 
     if (status === 'CONNECTED') {

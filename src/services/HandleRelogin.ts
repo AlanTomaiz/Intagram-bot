@@ -8,19 +8,17 @@ import OldAccountsRepository from '../repositories/OldAccountRepository';
 
 import { create } from '../controllers/initializer';
 import { makeQuery } from '../controllers/mysql';
-import { TestConnection } from '../controllers/connection';
 import { logger } from '../utils/logger';
 import { logData } from '../utils/handleFiles';
 
 export default class HandleRelogin {
   async run(): Promise<void> {
     logger.info('Start proccess relogin.');
+    // await this.only();
     await this.queue();
   }
 
   async queue(): Promise<void> {
-    // await TestConnection();
-
     const userRepository = getCustomRepository(AccountRepository);
     const repository = getCustomRepository(OldAccountsRepository);
     const oldUsers = await repository.index();
@@ -46,7 +44,7 @@ export default class HandleRelogin {
           ${JSON.stringify(response)}`);
         }
 
-        if (response.fbid) {
+        if (response.success) {
           const manager = getManager();
 
           await manager.query(
@@ -85,9 +83,9 @@ export default class HandleRelogin {
 
   async only() {
     // Configuração de prox
-    const execPHP = promisify(phpRunner.exec);
-    const ipProxy = await execPHP('php script.php addIpv6,1');
-    const proxy = JSON.parse(ipProxy)[0];
+    // const execPHP = promisify(phpRunner.exec);
+    // const ipProxy = await execPHP('php script.php addIpv6,1');
+    // const proxy = JSON.parse(ipProxy)[0];
 
     const user = {
       username: '',
@@ -97,8 +95,8 @@ export default class HandleRelogin {
     const response = await create(user);
     console.log(response);
 
-    await execPHP(`php script.php rmIpv6,${proxy.ip}`);
-    await execPHP('php script.php restartSquid');
+    // await execPHP(`php script.php rmIpv6,${proxy.ip}`);
+    // await execPHP('php script.php restartSquid');
     logger.info('Relogin finalizado.');
   }
 }
