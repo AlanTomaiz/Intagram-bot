@@ -1,5 +1,7 @@
+/* eslint no-empty: "off" */
 import { Page } from 'puppeteer';
 
+import AppError from '../errors/app-error';
 import { Credentials } from '../config/types';
 import { getInterfaceStatus, saveCookies } from '../controllers/auth';
 
@@ -24,10 +26,16 @@ export default class Profile {
     }
 
     if (status === 'CONNECTED') {
-      await this.page.waitForTimeout(500);
+      try {
+        await this.page.waitForSelector('input[placeholder="Search"]', {
+          timeout: 2000,
+        });
 
-      await saveCookies(this.page, this.credentials.username);
-      return { status, success: true, message: `Login with success!` };
+        await saveCookies(this.page, this.credentials.username);
+        return { status, success: true, message: `Login with success!` };
+      } catch {
+        throw new AppError(`Error on save cookies.`);
+      }
     }
 
     if (status === 'USER_NOT_EXISTENT') {
@@ -85,6 +93,7 @@ export default class Profile {
   }
 
   protected async waitForLogin() {
+    console.log('waitForLogin');
     await this.page.type('input[name="username"]', this.credentials.username);
     await this.page.type('input[name="password"]', this.credentials.password);
     await this.page.click('#loginForm [type="submit"]', { delay: 50 });
@@ -94,7 +103,7 @@ export default class Profile {
         response =>
           response.url().includes('accounts/login/ajax/') &&
           response.request().method() === 'POST',
-        { timeout: 10000 },
+        { timeout: 30000 },
       )
       .then(response => response.json());
 
