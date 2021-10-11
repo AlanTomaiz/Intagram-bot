@@ -33,37 +33,43 @@ export default class HandleRelogin {
     let count = 0;
 
     for await (const user of oldUsers) {
-      const currentProxy = proxy[count++].port;
-      const response = await create(user, currentProxy);
+      const currentProxy = proxy[count++];
 
-      if (!response.success) {
-        logger.error(`${user.username}:${user.password} - ERROR`);
-        await makeQuery({ _id: user.id, status: response.status });
+      try {
+        const response = await create(user, currentProxy.port);
 
-        logData(`
-        ${user.username}:${user.password}
-        ${JSON.stringify(response)}`);
+        if (!response.success) {
+          logger.error(`${user.username}:${user.password} - ERROR`);
+          await makeQuery({ _id: user.id, status: response.status });
+
+          logData(`
+          ${user.username}:${user.password}
+          ${JSON.stringify(response)}`);
+        }
+
+        if (response.fbid) {
+          logger.info(`${user.username}:${user.password} - SUCCESS`);
+          const { id, fbid, full_name, profile_pic_url_hd, username } =
+            response;
+
+          const newUser = {
+            fbid,
+            instaid: id,
+            avatar: profile_pic_url_hd,
+            account_user: user.username,
+            account_pass: user.password,
+            account_name: full_name,
+            username,
+          };
+
+          const saveData = userRepository.create(newUser);
+          await userRepository.save(saveData);
+        }
+      } catch (error: any) {
+        logger.error(error.message);
       }
 
-      if (response.fbid) {
-        logger.info(`${user.username}:${user.password} - SUCCESS`);
-        const { id, fbid, full_name, profile_pic_url_hd, username } = response;
-
-        const newUser = {
-          fbid,
-          instaid: id,
-          avatar: profile_pic_url_hd,
-          account_user: user.username,
-          account_pass: user.password,
-          account_name: full_name,
-          username,
-        };
-
-        const saveData = userRepository.create(newUser);
-        await userRepository.save(saveData);
-      }
-
-      await execPHP(`php script.php rmIpv6,${proxy.ip}`);
+      await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
     }
 
     // Finalizar prox
