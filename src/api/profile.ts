@@ -1,8 +1,13 @@
 import { Page } from 'puppeteer';
 
-import AppError from '../errors/app-error';
 import { Credentials } from '../config/types';
 import { getInterfaceStatus, saveCookies } from '../controllers/auth';
+
+interface Response {
+  status: string;
+  success: boolean;
+  message: string;
+}
 
 export default class Profile {
   readonly credentials: Credentials;
@@ -11,7 +16,7 @@ export default class Profile {
     this.credentials = credentials;
   }
 
-  public async _initialize() {
+  public async _initialize(): Promise<Response> {
     let status = await getInterfaceStatus(this.page);
 
     if (status === 'DISCONNECTED') {
@@ -20,36 +25,50 @@ export default class Profile {
 
     if (status === 'CONNECTED') {
       await saveCookies(this.page, this.credentials.username);
-      return 'success';
+      return { status, success: true, message: `Login with success!` };
     }
 
     if (status === 'USER_NOT_EXISTENT') {
-      throw new AppError({
+      return {
         status,
         success: false,
         message: `The username doesn't belong to an account.`,
-      });
+      };
     }
 
     if (status === 'PASS_INCORRECT') {
-      throw new AppError({
+      return {
         status,
         success: false,
         message: `Password was incorrect.`,
-      });
+      };
     }
 
     if (status === 'CHECKPOINT') {
       await saveCookies(this.page, this.credentials.username);
 
-      throw new AppError({
+      return {
         status,
         success: false,
         message: `Checkpoint required.`,
-      });
+      };
     }
 
-    return status;
+    if (status === 'NEW_TEST_getInterfaceStatus') {
+      await this.page.screenshot({ path: 'temp/page.png' });
+
+      return {
+        status,
+        success: false,
+        message: `Novo teste`,
+      };
+    }
+
+    return {
+      status: String(status),
+      success: false,
+      message: `NEW_TESTE__initialize`,
+    };
   }
 
   public async getUserData() {

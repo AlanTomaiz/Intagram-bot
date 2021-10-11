@@ -12,7 +12,7 @@ export async function initBrowser(
   let browser;
   await puppeteer
     .launch({
-      headless: false,
+      // headless: false,
       args: [...configs],
     })
     .then(event => {

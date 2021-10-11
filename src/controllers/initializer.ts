@@ -5,10 +5,10 @@ import { Credentials } from '../config/types';
 import { logger } from '../utils/logger';
 import { puppeteerConfig } from '../config/puppeteer.config';
 
-export async function create(credentials: Credentials) {
+export async function create(credentials: Credentials, proxy_port: number) {
   const browserConfigs = [
     ...puppeteerConfig,
-    // `--proxy-server=http://localhost:${proxy_port}`,
+    `--proxy-server=http://localhost:${proxy_port}`,
   ];
 
   const browser = await initBrowser(browserConfigs);
@@ -32,20 +32,23 @@ export async function create(credentials: Credentials) {
   try {
     const response = await client._initialize();
 
-    if (response === 'success') {
+    if (response.success) {
       logger.info(`User connected with success!!!`);
 
       const user = await client.getUserData();
       browser.close();
 
-      return user;
+      return {
+        ...response,
+        ...user,
+      };
     }
+
+    return response;
   } catch (err: any) {
     logger.error(err.message);
     browser.close();
 
     return err;
   }
-
-  return false;
 }

@@ -32,10 +32,16 @@ export async function TestConnection() {
       waitUntil: 'domcontentloaded',
     });
 
+    logger.info(`IPV6 success.`);
+
     await execPHP(`php script.php rmIpv6,${proxy.ip}`);
     await execPHP('php script.php restartSquid');
     await browser.close();
   } catch {
-    throw new AppError('Falha na conexão com prox!');
+    await execPHP(`php script.php rmIpv6,${proxy.ip}`);
+    await execPHP('php script.php restartSquid');
+    await browser.close();
+
+    throw new AppError('IPV6 error.');
   }
 }
