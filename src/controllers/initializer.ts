@@ -48,7 +48,7 @@ export async function create(credentials: Credentials, proxy_port?: number) {
     browser.close();
     return response;
   } catch (err: any) {
-    logger.error(err.message);
+    logger.error('CREATE ERROR:', err.message);
     browser.close();
 
     return err;
