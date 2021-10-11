@@ -55,7 +55,9 @@ export default class Profile {
     }
 
     if (status === 'NEW_TEST_getInterfaceStatus') {
-      await this.page.screenshot({ path: 'temp/page.png' });
+      await this.page.screenshot({
+        path: `temp/page-${new Date().getTime()}.png`,
+      });
 
       return {
         status,
