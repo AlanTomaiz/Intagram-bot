@@ -1,5 +1,5 @@
 /* eslint no-plusplus: "off" */
-import { getCustomRepository, getManager } from 'typeorm';
+import { getCustomRepository } from 'typeorm';
 import phpRunner from 'child_process';
 import promisify from 'promisify-node';
 
@@ -21,7 +21,6 @@ export default class HandleRelogin {
   }
 
   async start(): Promise<void> {
-    const manager = getManager();
     const userRepository = getCustomRepository(AccountRepository);
 
     const repository = getCustomRepository(OldAccountsRepository);
@@ -40,11 +39,7 @@ export default class HandleRelogin {
       const response = await create(user, currentProxy);
 
       if (!response.success) {
-        const query = await makeQuery({
-          _id: user.id,
-          status: response.status,
-        });
-        await manager.query(query);
+        await makeQuery({ _id: user.id, status: response.status });
 
         logData(`
         ${user.username}:${user.password}
