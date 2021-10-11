@@ -14,15 +14,14 @@ import { logData } from '../utils/handleFiles';
 
 export default class HandleRelogin {
   async run(): Promise<void> {
-    // await TestConnection();
-
     logger.info('Start proccess relogin.');
-    await this.start();
+    await this.queue();
   }
 
-  async start(): Promise<void> {
-    const userRepository = getCustomRepository(AccountRepository);
+  async queue(): Promise<void> {
+    // await TestConnection();
 
+    const userRepository = getCustomRepository(AccountRepository);
     const repository = getCustomRepository(OldAccountsRepository);
     const oldUsers = await repository.index();
 
@@ -74,5 +73,25 @@ export default class HandleRelogin {
 
     // Finalizar prox
     await execPHP('php script.php restartSquid');
+    logger.info('Relogin finalizado.');
+  }
+
+  async only() {
+    // Configuração de prox
+    const execPHP = promisify(phpRunner.exec);
+    const ipProxy = await execPHP('php script.php addIpv6,1');
+    const proxy = JSON.parse(ipProxy)[0];
+
+    const user = {
+      username: '',
+      password: '',
+    };
+
+    const response = await create(user);
+    console.log(response);
+
+    await execPHP(`php script.php rmIpv6,${proxy.ip}`);
+    await execPHP('php script.php restartSquid');
+    logger.info('Relogin finalizado.');
   }
 }

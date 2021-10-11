@@ -5,7 +5,7 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { injectCookies } from './auth';
 
 export async function initBrowser(
-  configs: Array<string>,
+  configs: string[],
 ): Promise<Browser | undefined> {
   puppeteer.use(StealthPlugin());
 
@@ -47,6 +47,12 @@ export async function initInstagram(
     await page.goto('https://www.instagram.com/', {
       waitUntil: 'domcontentloaded',
       timeout: 20000,
+    });
+
+    await page.setCookie({
+      name: 'ig_lang',
+      value: 'en',
+      path: '/',
     });
 
     // Try auth

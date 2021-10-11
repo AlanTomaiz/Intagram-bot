@@ -5,29 +5,29 @@ import { Credentials } from '../config/types';
 import { logger } from '../utils/logger';
 import { puppeteerConfig } from '../config/puppeteer.config';
 
-export async function create(credentials: Credentials, proxy_port: number) {
-  const browserConfigs = [
-    ...puppeteerConfig,
-    `--proxy-server=http://localhost:${proxy_port}`,
-  ];
+export async function create(credentials: Credentials, proxy_port?: number) {
+  const browserConfigs = [...puppeteerConfig];
+
+  // Config proxy
+  if (proxy_port) {
+    browserConfigs.push(`--proxy-server=http://localhost:${proxy_port}`);
+  }
 
   logger.info(`Initializing browser...`);
   const browser = await initBrowser(browserConfigs);
 
   if (!browser) {
-    logger.error(`Error open browser.`);
-    throw new AppError('Erro ao inicializar browser, tente novamente.');
+    throw new AppError(`Error open browser.`);
   }
 
   const page = await initInstagram(browser, credentials.username);
 
   if (!page) {
-    logger.error(`Error accessing page.`);
-    throw new AppError('Erro ao acessar a página, tente novamente.');
+    throw new AppError(`Error accessing page.`);
   }
 
-  const client = new Instagram(page, credentials);
   logger.info('Page successfully accessed.');
+  const client = new Instagram(page, credentials);
 
   try {
     const response = await client._initialize();
@@ -44,6 +44,7 @@ export async function create(credentials: Credentials, proxy_port: number) {
       };
     }
 
+    browser.close();
     return response;
   } catch (err: any) {
     logger.error(err.message);
