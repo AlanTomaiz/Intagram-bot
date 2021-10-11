@@ -46,6 +46,10 @@ export default class Profile {
       };
     }
 
+    if (status === 'SPAM') {
+      throw new AppError(`Try Again Later.`);
+    }
+
     if (status === 'PASS_INCORRECT') {
       return {
         status,
@@ -79,7 +83,7 @@ export default class Profile {
     return {
       status: String(status),
       success: false,
-      message: `NEW_TESTE__initialize`,
+      message: `NEW_TEST__initialize`,
     };
   }
 
@@ -93,7 +97,6 @@ export default class Profile {
   }
 
   protected async waitForLogin() {
-    console.log('waitForLogin');
     await this.page.type('input[name="username"]', this.credentials.username);
     await this.page.type('input[name="password"]', this.credentials.password);
     await this.page.click('#loginForm [type="submit"]', { delay: 50 });
@@ -103,12 +106,16 @@ export default class Profile {
         response =>
           response.url().includes('accounts/login/ajax/') &&
           response.request().method() === 'POST',
-        { timeout: 30000 },
+        { timeout: 60000 },
       )
       .then(response => response.json());
 
-    const { user, authenticated, two_factor_required, checkpoint_url } =
+    const { user, authenticated, two_factor_required, checkpoint_url, spam } =
       request;
+
+    if (spam) {
+      return 'SPAM';
+    }
 
     if (!user) {
       return 'USER_NOT_EXISTENT';
@@ -127,6 +134,6 @@ export default class Profile {
     }
 
     console.log('waitForLogin request', request);
-    return 'FINAL_LOGIN';
+    return 'NEW_TEST_FINAL_LOGIN';
   }
 }
