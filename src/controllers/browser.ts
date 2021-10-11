@@ -53,6 +53,10 @@ export async function initInstagram(
 
     return page;
   } catch (err) {
+    await page.screenshot({
+      path: `temp/erro-page-${new Date().getTime()}.png`,
+    });
+
     console.log('Erro page: ', err);
     return false;
   }
