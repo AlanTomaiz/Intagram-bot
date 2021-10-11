@@ -66,7 +66,7 @@ export default class HandleRelogin {
           await userRepository.save(saveData);
         }
       } catch (error: any) {
-        logger.error(error.message);
+        logger.error(error.data.message);
       }
 
       await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);

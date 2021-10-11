@@ -46,6 +46,7 @@ export async function initInstagram(
   try {
     await page.goto('https://www.instagram.com/', {
       waitUntil: 'domcontentloaded',
+      timeout: 20000,
     });
 
     // Try auth
@@ -57,7 +58,6 @@ export async function initInstagram(
       path: `temp/erro-page-${new Date().getTime()}.png`,
     });
 
-    console.log('Erro page: ', err);
     return false;
   }
 }

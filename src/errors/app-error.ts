@@ -6,12 +6,12 @@ interface Data {
 }
 
 export default class AppError {
-  public readonly response;
+  public readonly data;
 
   public readonly statusCode;
 
   constructor(data: Data | string, statusCode = 400) {
-    this.response = data;
+    this.data = data;
     this.statusCode = statusCode;
   }
 }
