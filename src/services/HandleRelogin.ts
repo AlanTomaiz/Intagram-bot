@@ -40,7 +40,10 @@ export default class HandleRelogin {
       const response = await create(user, currentProxy);
 
       if (!response.success) {
-        const query = await makeQuery({ ...response, ...user });
+        const query = await makeQuery({
+          _id: user.id,
+          status: response.status,
+        });
         await manager.query(query);
 
         logData(`
