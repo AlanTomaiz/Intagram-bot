@@ -54,7 +54,7 @@ export default class Profile {
       };
     }
 
-    if (status === 'NEW_TEST_getInterfaceStatus') {
+    if (status === 'NEW_TEST_INTERFACE') {
       await this.page.screenshot({
         path: `temp/page-${new Date().getTime()}.png`,
       });

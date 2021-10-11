@@ -33,20 +33,20 @@ export default class HandleRelogin {
     let count = 0;
 
     for await (const user of oldUsers) {
-      logger.info(`${user.username}:${user.password}`);
-
       const currentProxy = proxy[count++].port;
       const response = await create(user, currentProxy);
 
       if (!response.success) {
+        logger.error(`${user.username}:${user.password} - ERROR`);
         await makeQuery({ _id: user.id, status: response.status });
 
         logData(`
         ${user.username}:${user.password}
-        ${response}`);
+        ${JSON.stringify(response)}`);
       }
 
       if (response.fbid) {
+        logger.info(`${user.username}:${user.password} - SUCCESS`);
         const { id, fbid, full_name, profile_pic_url_hd, username } = response;
 
         const newUser = {

@@ -11,19 +11,19 @@ export async function create(credentials: Credentials, proxy_port: number) {
     `--proxy-server=http://localhost:${proxy_port}`,
   ];
 
-  const browser = await initBrowser(browserConfigs);
   logger.info(`Initializing browser...`);
+  const browser = await initBrowser(browserConfigs);
 
   if (!browser) {
-    logger.error(`Error no open browser.`);
+    logger.error(`Error open browser.`);
     throw new AppError('Erro ao inicializar browser, tente novamente.');
   }
 
   const page = await initInstagram(browser, credentials.username);
 
   if (!page) {
-    logger.error(`Error no open browser.`);
-    throw new AppError('Erro ao inicializar browser, tente novamente.');
+    logger.error(`Error accessing page.`);
+    throw new AppError('Erro ao acessar a página, tente novamente.');
   }
 
   const client = new Instagram(page, credentials);
