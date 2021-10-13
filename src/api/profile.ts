@@ -154,11 +154,6 @@ export default class Profile {
       spam,
     } = request;
 
-    if (request === 'ERROR_LOGIN') {
-      await this.page.waitForTimeout(500);
-      return 'ERROR_LOGIN';
-    }
-
     if (spam) {
       return 'SPAM';
     }
