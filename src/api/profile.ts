@@ -84,7 +84,7 @@ export default class Profile {
       };
     }
 
-    if (status === 'NEW_TEST_INTERFACE') {
+    if (status === 'NEW_TEST_INTERFACE' || status === 'NEW_TEST_FINAL_LOGIN') {
       await this.page.screenshot({
         path: `temp/page-${new Date().getTime()}.png`,
       });
@@ -139,20 +139,20 @@ export default class Profile {
       return 'SPAM';
     }
 
-    if (user && reactivated) {
+    if (checkpoint_url) {
+      return 'CHECKPOINT';
+    }
+
+    if (two_factor_required) {
+      return 'TWO_FACTOR';
+    }
+
+    if (reactivated) {
       return 'REACTIVATED';
     }
 
     if (!user) {
       return 'USER_NOT_EXISTENT';
-    }
-
-    if (user && checkpoint_url) {
-      return 'CHECKPOINT';
-    }
-
-    if (user && two_factor_required) {
-      return 'TWO_FACTOR';
     }
 
     if (user && !authenticated) {
@@ -163,7 +163,6 @@ export default class Profile {
       return 'CONNECTED';
     }
 
-    console.log('waitForLogin request', request);
     return 'NEW_TEST_FINAL_LOGIN';
   }
 }
