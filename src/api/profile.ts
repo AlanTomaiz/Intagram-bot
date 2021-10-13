@@ -29,6 +29,18 @@ export default class Profile {
       status = await getInterfaceStatus(this.page);
     }
 
+    if (status === 'ERROR_LOGIN') {
+      status = await getInterfaceStatus(this.page);
+    }
+
+    if (status === 'BANNED') {
+      return {
+        status,
+        success: false,
+        message: `The user has bem banned from instagram.`,
+      };
+    }
+
     if (status === 'CONNECTED') {
       try {
         await this.page.waitForSelector('input[placeholder="Search"]', {
@@ -128,8 +140,10 @@ export default class Profile {
       .catch(err => {
         console.error('request error', err);
 
-        throw new AppError(`Error login request.`);
+        return 'ERROR_LOGIN';
       });
+
+    console.log('waitForLogin request', request);
 
     const {
       user,
