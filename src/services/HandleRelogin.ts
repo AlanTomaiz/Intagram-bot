@@ -54,8 +54,7 @@ export default class HandleRelogin {
           );
 
           logger.info(`${user.username}:${user.password} - SUCCESS`);
-          const { id, fbid, full_name, profile_pic_url_hd, username } =
-            response;
+          const { id, fbid, profile_pic_url_hd, username } = response;
 
           const newUser = {
             fbid,
@@ -63,7 +62,6 @@ export default class HandleRelogin {
             avatar: profile_pic_url_hd,
             account_user: user.username,
             account_pass: user.password,
-            account_name: full_name,
             username,
           };
 
