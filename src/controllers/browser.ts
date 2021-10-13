@@ -40,7 +40,7 @@ export async function initInstagram(
   try {
     await page.goto('https://www.instagram.com/accounts/login/', {
       waitUntil: 'domcontentloaded',
-      timeout: 20000,
+      timeout: 10000,
     });
 
     await page.setCookie({
@@ -58,7 +58,7 @@ export async function initInstagram(
   try {
     await page.goto('https://www.instagram.com/', {
       waitUntil: 'domcontentloaded',
-      timeout: 20000,
+      timeout: 10000,
     });
 
     await page.setCookie({

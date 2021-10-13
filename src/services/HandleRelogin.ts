@@ -36,8 +36,10 @@ export default class HandleRelogin {
         const response = await create(user, currentProxy.port);
 
         if (!response.success && !response.name) {
-          logger.error(`${user.username}:${user.password} - ERROR`);
           await makeQuery({ _id: user.id, status: response.status });
+          logger.error(
+            `${user.username}:${user.password} - ${response.status}`,
+          );
 
           logData(`
           ${user.username}:${user.password}

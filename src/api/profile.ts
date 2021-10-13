@@ -62,6 +62,18 @@ export default class Profile {
       };
     }
 
+    if (status === 'TWO_FACTOR') {
+      await this.page.screenshot({
+        path: `temp/page-two_factor-${new Date().getTime()}.png`,
+      });
+
+      return {
+        status,
+        success: false,
+        message: `TWO_FACTOR`,
+      };
+    }
+
     if (status === 'CHECKPOINT') {
       await saveCookies(this.page, this.credentials.username);
 
@@ -135,16 +147,20 @@ export default class Profile {
       return 'USER_NOT_EXISTENT';
     }
 
+    if (user && checkpoint_url) {
+      return 'CHECKPOINT';
+    }
+
+    if (user && two_factor_required) {
+      return 'TWO_FACTOR';
+    }
+
     if (user && !authenticated) {
       return 'PASS_INCORRECT';
     }
 
     if (user && authenticated) {
       return 'CONNECTED';
-    }
-
-    if (checkpoint_url) {
-      return 'CHECKPOINT';
     }
 
     console.log('waitForLogin request', request);
