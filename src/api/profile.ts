@@ -25,6 +25,10 @@ export default class Profile {
       status = await this.waitForLogin();
     }
 
+    if (status === 'REACTIVATED') {
+      status = await getInterfaceStatus(this.page);
+    }
+
     if (status === 'CONNECTED') {
       try {
         await this.page.waitForSelector('input[placeholder="Search"]', {
@@ -110,11 +114,21 @@ export default class Profile {
       )
       .then(response => response.json());
 
-    const { user, authenticated, two_factor_required, checkpoint_url, spam } =
-      request;
+    const {
+      user,
+      authenticated,
+      two_factor_required,
+      checkpoint_url,
+      reactivated,
+      spam,
+    } = request;
 
     if (spam) {
       return 'SPAM';
+    }
+
+    if (user && reactivated) {
+      return 'REACTIVATED';
     }
 
     if (!user) {

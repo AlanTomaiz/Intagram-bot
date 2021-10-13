@@ -1,3 +1,4 @@
+/* eslint no-empty: "off" */
 import { Browser, Page } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
@@ -37,6 +38,24 @@ export async function initInstagram(
   }
 
   try {
+    await page.goto('https://www.instagram.com/accounts/login/', {
+      waitUntil: 'domcontentloaded',
+      timeout: 20000,
+    });
+
+    await page.setCookie({
+      name: 'ig_lang',
+      value: 'en',
+      path: '/',
+    });
+
+    // Try auth
+    await injectCookies(page, username);
+
+    return page;
+  } catch {}
+
+  try {
     await page.goto('https://www.instagram.com/', {
       waitUntil: 'domcontentloaded',
       timeout: 20000,
@@ -52,7 +71,7 @@ export async function initInstagram(
     await injectCookies(page, username);
 
     return page;
-  } catch (err) {
+  } catch (err: any) {
     await page.screenshot({
       path: `temp/erro-page-${new Date().getTime()}.png`,
     });

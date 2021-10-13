@@ -2,7 +2,7 @@
 
 // Gera um ipv6
 function randomIpv6() {
-    return '2001:470:8a2f:' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536));
+    return '2001:470:1f06:' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536));
 }
 
 // Adiciona o ip a interface do server
@@ -33,6 +33,7 @@ tcp_outgoing_address {$ip} tasty{$port}
 
   fclose($file);
   exec("sudo systemctl restart squid");
+  sleep(1);
   echo json_encode($ipList);
 }
 
