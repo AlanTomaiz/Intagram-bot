@@ -122,9 +122,14 @@ export default class Profile {
         response =>
           response.url().includes('accounts/login/ajax/') &&
           response.request().method() === 'POST',
-        { timeout: 60000 },
+        { timeout: 10000 },
       )
-      .then(response => response.json());
+      .then(response => response.json())
+      .catch(err => {
+        console.error('request error', err);
+
+        throw new AppError(`Error login request.`);
+      });
 
     const {
       user,
