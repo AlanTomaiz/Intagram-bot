@@ -132,7 +132,7 @@ export default class Profile {
     const request = await this.page
       .waitForResponse(
         response =>
-          response.url().includes('accounts/login/ajax/') &&
+          response.url().includes('accounts/login/ajax') &&
           response.request().method() === 'POST',
         { timeout: 10000 },
       )
@@ -153,6 +153,10 @@ export default class Profile {
       reactivated,
       spam,
     } = request;
+
+    if (request === 'ERROR_LOGIN') {
+      return 'ERROR_LOGIN';
+    }
 
     if (spam) {
       return 'SPAM';
