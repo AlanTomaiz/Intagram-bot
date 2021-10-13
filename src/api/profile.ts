@@ -155,6 +155,10 @@ export default class Profile {
     } = request;
 
     if (request === 'ERROR_LOGIN') {
+      await this.page.waitForNavigation({
+        waitUntil: 'networkidle0',
+      });
+
       return 'ERROR_LOGIN';
     }
 
