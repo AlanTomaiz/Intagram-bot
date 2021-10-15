@@ -7,11 +7,11 @@ const InstaRoutes = Router();
 
 InstaRoutes.get('/relogin/', async (request, response) => {
   const serviceRelogin = new HandleRelogin();
-  await serviceRelogin.run();
+  serviceRelogin.run();
 
   return response.send({
     status: 'success',
-    message: 'Relogin realizado com sucesso!',
+    message: 'Relogin iniciado com sucesso!',
   });
 });
 

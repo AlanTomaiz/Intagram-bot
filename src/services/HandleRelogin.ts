@@ -16,6 +16,10 @@ export default class HandleRelogin {
     logger.info('Start proccess relogin.');
     // await this.only();
     await this.queue();
+    await this.queue();
+    await this.queue();
+    await this.queue();
+    await this.queue();
   }
 
   async queue(): Promise<void> {
