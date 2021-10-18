@@ -75,14 +75,10 @@ export default class Profile {
     }
 
     if (status === 'TWO_FACTOR') {
-      await this.page.screenshot({
-        path: `temp/page-two_factor-${new Date().getTime()}.png`,
-      });
-
       return {
         status,
         success: false,
-        message: `TWO_FACTOR`,
+        message: `Two-factor authentication.`,
       };
     }
 
@@ -101,11 +97,13 @@ export default class Profile {
         path: `temp/page-${new Date().getTime()}.png`,
       });
 
-      return {
-        status,
-        success: false,
-        message: `Novo teste`,
-      };
+      throw new AppError(`Try Again Later.`);
+
+      // return {
+      //   status,
+      //   success: false,
+      //   message: `Novo teste`,
+      // };
     }
 
     return {
@@ -138,8 +136,11 @@ export default class Profile {
       )
       .then(response => response.json())
       .catch(err => {
-        console.error('request error', err);
+        if (String(err).includes('Timeout')) {
+          return 'TIMEOUT';
+        }
 
+        console.error('request error', err);
         return 'ERROR_LOGIN';
       });
 
@@ -154,7 +155,7 @@ export default class Profile {
       spam,
     } = request;
 
-    if (spam) {
+    if (spam || request === 'TIMEOUT') {
       return 'SPAM';
     }
 
