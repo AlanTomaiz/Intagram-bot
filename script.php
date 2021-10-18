@@ -50,6 +50,7 @@ function restartSquid() {
   fclose($file);
 
   exec("sudo systemctl restart squid");
+  sleep(1);
 }
 
 // execução via node js

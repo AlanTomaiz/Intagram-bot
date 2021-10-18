@@ -2,6 +2,7 @@
 import { Page } from 'puppeteer';
 
 import AppError from '../errors/app-error';
+import { logger } from '../utils/logger';
 import { Credentials } from '../config/types';
 import { getInterfaceStatus, saveCookies } from '../controllers/auth';
 
@@ -26,10 +27,6 @@ export default class Profile {
     }
 
     if (status === 'REACTIVATED') {
-      status = await getInterfaceStatus(this.page);
-    }
-
-    if (status === 'ERROR_LOGIN') {
       status = await getInterfaceStatus(this.page);
     }
 
@@ -123,6 +120,8 @@ export default class Profile {
   }
 
   protected async waitForLogin() {
+    logger.info('Initialize login...');
+
     await this.page.type('input[name="username"]', this.credentials.username);
     await this.page.type('input[name="password"]', this.credentials.password);
     await this.page.click('#loginForm [type="submit"]', { delay: 50 });

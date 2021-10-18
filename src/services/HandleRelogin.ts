@@ -28,6 +28,7 @@ export default class HandleRelogin {
   }
 
   async queue(): Promise<void> {
+    const execPHP = promisify(phpRunner.exec);
     const manager = getManager();
 
     const userRepository = getCustomRepository(AccountRepository);
@@ -35,7 +36,7 @@ export default class HandleRelogin {
     const oldUsers = await repository.index();
 
     // Configuração de prox
-    const execPHP = promisify(phpRunner.exec);
+    await execPHP('php script.php restartSquid');
     const ipProxy = await execPHP('php script.php addIpv6,100');
     const proxy = JSON.parse(ipProxy);
     let count = 0;
