@@ -20,9 +20,16 @@ export default class HandleRelogin {
     await this.queue();
     await this.queue();
     await this.queue();
+    await this.queue();
+    await this.queue();
+    await this.queue();
+    await this.queue();
+    await this.queue();
   }
 
   async queue(): Promise<void> {
+    const manager = getManager();
+
     const userRepository = getCustomRepository(AccountRepository);
     const repository = getCustomRepository(OldAccountsRepository);
     const oldUsers = await repository.index();
@@ -51,8 +58,6 @@ export default class HandleRelogin {
         }
 
         if (response.success) {
-          const manager = getManager();
-
           await manager.query(
             'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 1;',
           );
@@ -74,6 +79,10 @@ export default class HandleRelogin {
         }
       } catch (error: any) {
         logger.error(error.data?.message || error.data || error);
+
+        await manager.query(
+          'UPDATE metrics SET attempts = attempts + 1, error = error + 1 WHERE metric_id = 1;',
+        );
       }
 
       await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
