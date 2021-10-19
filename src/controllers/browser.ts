@@ -43,11 +43,15 @@ export async function initInstagram(browser: Browser, username: string) {
         timeout: 10000,
       });
 
-      await page.setCookie({
-        name: 'ig_lang',
-        value: 'en',
-        path: '/',
-      });
+      const language = [
+        {
+          name: 'ig_lang',
+          value: 'en',
+          path: '/',
+        },
+      ];
+
+      await page.setCookie(...language);
 
       // Try auth
       await injectCookies(page, username);

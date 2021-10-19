@@ -19,5 +19,5 @@ export const puppeteerConfig = [
   '--disable-threaded-scrolling',
   '--disable-histogram-customizer',
   '--disable-gl-extensions',
-  '--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36',
+  '--user-agent=Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:93.0) Gecko/20100101 Firefox/93.0',
 ];
