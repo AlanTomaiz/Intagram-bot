@@ -17,9 +17,6 @@
     "pino-pretty": "^7.0.1",
     "promisify-node": "^0.5.0",
     "puppeteer": "^10.2.0",
-    "puppeteer-extra": "^3.2.3",
-    "puppeteer-extra-plugin-stealth": "^2.8.2",
-    "puppeteer-page-proxy": "^1.2.8",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.37"
   },

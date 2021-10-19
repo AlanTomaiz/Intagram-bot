@@ -1,13 +1,9 @@
 /* eslint no-empty: "off", no-await-in-loop: "off" */
 import puppeteer, { Browser } from 'puppeteer';
-// import puppeteer from 'puppeteer-extra';
-// import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 import { injectCookies } from './auth';
 
 export async function initBrowser(configs: string[]) {
-  // puppeteer.use(StealthPlugin());
-
   return puppeteer.launch({
     // headless: false,
     args: [...configs],
@@ -48,7 +44,7 @@ export async function initInstagram(browser: Browser, username: string) {
 
       return true;
     } catch (err: any) {
-      console.error(err.message);
+      // console.error(err.message);
       return false;
     }
   };

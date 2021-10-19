@@ -7,9 +7,9 @@ import AccountRepository from '../repositories/AccountRepository';
 import OldAccountsRepository from '../repositories/OldAccountRepository';
 
 import { create } from '../controllers/initializer';
-import { makeQuery } from '../controllers/mysql';
 import { logger } from '../utils/logger';
 import { logData } from '../utils/handleFiles';
+import { makeQuery } from '../controllers/mysql';
 
 export default class HandleRelogin {
   async run(): Promise<void> {

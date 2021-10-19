@@ -143,7 +143,7 @@ export default class Profile {
         return 'ERROR_LOGIN';
       });
 
-    console.log('waitForLogin request', request);
+    // console.log('waitForLogin request', request);
 
     const {
       user,
