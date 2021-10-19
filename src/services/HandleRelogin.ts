@@ -14,8 +14,11 @@ import { logData } from '../utils/handleFiles';
 export default class HandleRelogin {
   async run(): Promise<void> {
     logger.info('Start proccess relogin.');
+
     // await this.only();
     await this.queue();
+
+    logger.info('Relogin finalizado.');
   }
 
   async queue(): Promise<void> {
@@ -29,11 +32,11 @@ export default class HandleRelogin {
     // Configuração de prox
     await execPHP('php script.php restartSquid');
     const ipProxy = await execPHP('php script.php addIpv6,100');
-    const proxy = JSON.parse(ipProxy);
+    const proxies = JSON.parse(ipProxy);
     let count = 0;
 
     for await (const user of oldUsers) {
-      const currentProxy = proxy[count++];
+      const currentProxy = proxies[count++];
 
       try {
         const response = await create(user, currentProxy.port);
@@ -77,13 +80,16 @@ export default class HandleRelogin {
         );
       }
 
-      await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
       console.log('');
+    }
+
+    // limpa proxies
+    for await (const proxy of proxies) {
+      await execPHP(`php script.php rmIpv6,${proxy.ip}`);
     }
 
     // Finalizar prox
     await execPHP('php script.php restartSquid');
-    logger.info('Relogin finalizado.');
   }
 
   async only() {

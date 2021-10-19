@@ -58,7 +58,7 @@ export async function initInstagram(
   try {
     await page.goto('https://www.instagram.com/', {
       waitUntil: 'domcontentloaded',
-      timeout: 10000,
+      timeout: 20000,
     });
 
     await page.setCookie({
@@ -72,28 +72,12 @@ export async function initInstagram(
 
     return page;
   } catch (err: any) {
+    console.log('error page', err);
+
     await page.screenshot({
       path: `temp/erro-page-${new Date().getTime()}.png`,
     });
 
-    // browser.close();
-    // return false;
-  }
-
-  try {
-    await page.goto('http://ip6only.me/', {
-      waitUntil: 'domcontentloaded',
-    });
-
-    await page.screenshot({
-      path: `temp/ipv6-${new Date().getTime()}.png`,
-    });
-
-    console.log('Teste IPV6.');
-    browser.close();
-    return false;
-  } catch {
-    console.log('Erro IPV6.');
     browser.close();
     return false;
   }
