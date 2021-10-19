@@ -76,6 +76,24 @@ export async function initInstagram(
       path: `temp/erro-page-${new Date().getTime()}.png`,
     });
 
+    // browser.close();
+    // return false;
+  }
+
+  try {
+    await page.goto('http://ip6only.me/', {
+      waitUntil: 'domcontentloaded',
+    });
+
+    await page.screenshot({
+      path: `temp/ipv6-${new Date().getTime()}.png`,
+    });
+
+    console.log('Teste IPV6.');
+    browser.close();
+    return false;
+  } catch {
+    console.log('Erro IPV6.');
     browser.close();
     return false;
   }
