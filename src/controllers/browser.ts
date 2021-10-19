@@ -1,5 +1,5 @@
-/* eslint no-empty: "off" */
-import { Browser, Page } from 'puppeteer';
+/* eslint no-empty: "off", no-await-in-loop: "off" */
+import { Browser } from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
@@ -16,7 +16,7 @@ export async function initBrowser(
   });
 }
 
-export async function getPage(browser: Browser): Promise<Page> {
+export async function getPage(browser: Browser) {
   const pages = await browser.pages();
 
   if (pages.length) {
@@ -26,10 +26,9 @@ export async function getPage(browser: Browser): Promise<Page> {
   return browser.newPage();
 }
 
-export async function initInstagram(
-  browser: Browser,
-  username: string,
-): Promise<false | Page> {
+export async function initInstagram(browser: Browser, username: string) {
+  let data = false;
+  let attempts = 0;
   const page = await getPage(browser);
 
   if (!page) {
@@ -37,48 +36,47 @@ export async function initInstagram(
     return false;
   }
 
-  try {
-    await page.goto('https://www.instagram.com/accounts/login/', {
-      waitUntil: 'domcontentloaded',
-      timeout: 10000,
-    });
+  const collectData = async () => {
+    try {
+      await page.goto('https://www.instagram.com/', {
+        waitUntil: 'networkidle2',
+        timeout: 10000,
+      });
 
-    await page.setCookie({
-      name: 'ig_lang',
-      value: 'en',
-      path: '/',
-    });
+      await page.setCookie({
+        name: 'ig_lang',
+        value: 'en',
+        path: '/',
+      });
 
-    // Try auth
-    await injectCookies(page, username);
+      // Try auth
+      await injectCookies(page, username);
 
-    return page;
-  } catch {}
+      return true;
+    } catch (err: any) {
+      console.error(err.message);
+      return false;
+    }
+  };
 
-  try {
-    await page.goto('https://www.instagram.com/', {
-      waitUntil: 'domcontentloaded',
-      timeout: 20000,
-    });
+  // Retry request until it gets data or tries 5 times
+  while (data === false && attempts < 5) {
+    data = await collectData();
+    attempts += 1;
 
-    await page.setCookie({
-      name: 'ig_lang',
-      value: 'en',
-      path: '/',
-    });
-
-    // Try auth
-    await injectCookies(page, username);
-
-    return page;
-  } catch (err: any) {
-    console.log('error page', err);
-
-    await page.screenshot({
-      path: `temp/erro-page-${new Date().getTime()}.png`,
-    });
-
-    browser.close();
-    return false;
+    if (!data) {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
   }
+
+  if (data) {
+    return page;
+  }
+
+  await page.screenshot({
+    path: `temp/erro-page-${new Date().getTime()}.png`,
+  });
+
+  browser.close();
+  return false;
 }
