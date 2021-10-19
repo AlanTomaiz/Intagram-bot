@@ -1,14 +1,12 @@
 /* eslint no-empty: "off", no-await-in-loop: "off" */
-import { Browser } from 'puppeteer';
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import puppeteer, { Browser } from 'puppeteer';
+// import puppeteer from 'puppeteer-extra';
+// import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 import { injectCookies } from './auth';
 
-export async function initBrowser(
-  configs: string[],
-): Promise<Browser | undefined> {
-  puppeteer.use(StealthPlugin());
+export async function initBrowser(configs: string[]) {
+  // puppeteer.use(StealthPlugin());
 
   return puppeteer.launch({
     // headless: false,
@@ -39,19 +37,11 @@ export async function initInstagram(browser: Browser, username: string) {
   const collectData = async () => {
     try {
       await page.goto('https://www.instagram.com/', {
-        waitUntil: 'networkidle2',
+        waitUntil: 'domcontentloaded',
         timeout: 10000,
       });
 
-      const language = [
-        {
-          name: 'ig_lang',
-          value: 'en',
-          path: '/',
-        },
-      ];
-
-      await page.setCookie(...language);
+      await page.setCookie({ name: 'ig_lang', value: 'en', path: '/' });
 
       // Try auth
       await injectCookies(page, username);
@@ -69,7 +59,7 @@ export async function initInstagram(browser: Browser, username: string) {
     attempts += 1;
 
     if (!data) {
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 
