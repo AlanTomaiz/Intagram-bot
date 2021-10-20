@@ -1,6 +1,4 @@
 interface Data {
-  success?: boolean;
-  checkpoint?: boolean;
   message?: string;
   status?: string;
 }

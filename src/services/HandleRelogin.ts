@@ -17,17 +17,13 @@ export default class HandleRelogin {
 
     // await this.only();
     await this.queue();
-    await this.queue();
-    await this.queue();
-    await this.queue();
-    await this.queue();
 
     logger.info('Relogin finalizado.');
   }
 
   async queue(): Promise<void> {
-    const execPHP = promisify(phpRunner.exec);
     const manager = getManager();
+    const execPHP = promisify(phpRunner.exec);
 
     const userRepository = getCustomRepository(AccountRepository);
     const repository = getCustomRepository(OldAccountsRepository);
@@ -41,58 +37,61 @@ export default class HandleRelogin {
 
     for await (const user of oldUsers) {
       const currentProxy = proxies[count++];
+      const response = await create(user, currentProxy.port);
 
-      try {
-        const response = await create(user, currentProxy.port);
-
-        if (!response.success && !response.name) {
-          await makeQuery({ _id: user.id, status: response.status });
-          logger.error(
-            `${user.username}:${user.password} - ${response.status}`,
-          );
-
-          logData(`
-          ${user.username}:${user.password}
-          ${JSON.stringify(response)}`);
-        }
-
-        if (response.success) {
-          await manager.query(
-            'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 3;',
-          );
-
-          logger.info(`${user.username}:${user.password} - SUCCESS`);
-          const { id, fbid, profile_pic_url_hd, username } = response;
-
-          const newUser = {
-            fbid,
-            instaid: id,
-            avatar: profile_pic_url_hd,
-            account_user: user.username,
-            account_pass: user.password,
-            username,
-          };
-
-          const saveData = userRepository.create(newUser);
-          await userRepository.save(saveData);
-        }
-      } catch (error: any) {
-        logger.error(error.data?.message || error.data || error);
+      if (response.success) {
+        logger.info(`${user.username}:${user.password} - SUCCESS`);
 
         await manager.query(
-          'UPDATE metrics SET attempts = attempts + 1, error = error + 1 WHERE metric_id = 3;',
+          'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 2;',
+        );
+
+        const { id, fbid, profile_pic_url_hd, username } = response.data;
+
+        const newUser = {
+          fbid,
+          instaid: id,
+          avatar: profile_pic_url_hd,
+          account_user: user.username,
+          account_pass: user.password,
+          username,
+        };
+
+        const saveData = userRepository.create(newUser);
+        await userRepository.save(saveData);
+      }
+
+      // Error
+      if (response.success === false && response.data) {
+        const { status } = response.data;
+        logger.error(`${user.username}:${user.password} - ${status}`);
+
+        let query = makeQuery(status);
+        await manager.query(query);
+
+        // Update usuarios table
+        query = `UPDATE usuarios SET status = 3 WHERE id = ${user.id};`;
+
+        // Checkpoint
+        if (status === 'CHECKPOINT') {
+          query = `UPDATE usuarios SET status = 5 WHERE id = ${user.id};`;
+        }
+
+        await manager.query(query);
+
+        logData(
+          `${user.username}:${user.password} \r\n ${JSON.stringify(response)}`,
         );
       }
 
+      if (response.status) {
+        logger.error(`${user.username}:${user.password} - ${response.status}`);
+      }
+
       console.log('');
+      await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
     }
 
-    // limpa proxies
-    for await (const proxy of proxies) {
-      await execPHP(`php script.php rmIpv6,${proxy.ip}`);
-    }
-
-    // Finalizar prox
     await execPHP('php script.php restartSquid');
   }
 
@@ -108,7 +107,6 @@ export default class HandleRelogin {
     };
 
     const response = await create(user);
-    console.log(response);
 
     // await execPHP(`php script.php rmIpv6,${proxy.ip}`);
     // await execPHP('php script.php restartSquid');

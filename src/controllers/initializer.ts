@@ -1,11 +1,21 @@
-import Instagram from '../api/instagram';
-import AppError from '../errors/app-error';
 import { initBrowser, initInstagram } from './browser';
-import { Credentials } from '../config/types';
+import AppError from '../errors/app-error';
+import Instagram from '../api/instagram';
+
 import { logger } from '../utils/logger';
+import { Credentials } from '../config/types';
 import { puppeteerConfig } from '../config/puppeteer.config';
 
-export async function create(credentials: Credentials, proxy_port?: number) {
+interface Response {
+  success: boolean;
+  status?: string;
+  data?: any;
+}
+
+export async function create(
+  credentials: Credentials,
+  proxy_port?: number,
+): Promise<Response> {
   const browserConfigs = [...puppeteerConfig];
 
   // Config proxy
@@ -28,29 +38,44 @@ export async function create(credentials: Credentials, proxy_port?: number) {
   }
 
   logger.info('Page successfully accessed.');
-  const client = new Instagram(page, credentials);
+  const instagram = new Instagram(page, credentials);
 
-  try {
-    const response = await client._initialize();
-
-    if (response.success) {
-      logger.info(`User connected with success!!!`);
-
-      const user = await client.getUserData();
+  return instagram
+    ._initialize()
+    .then(async () => {
+      const user = await instagram.getUserData();
       browser.close();
 
+      const { id, fbid, profile_pic_url_hd, username } = user;
+
       return {
-        ...response,
-        ...user,
+        success: true,
+        data: { id, fbid, profile_pic_url_hd, username },
       };
-    }
+    })
+    .catch(async error => {
+      browser.close();
+      const { data } = error;
 
-    browser.close();
-    return response;
-  } catch (err: any) {
-    browser.close();
+      if (data) {
+        throw new AppError(data);
+      }
 
-    const message = err.data || err.message || err;
-    throw new AppError(`Create error: ${message}`);
-  }
+      // TIMEOU
+      console.error('error', error.message);
+      await page.screenshot({
+        path: `temp/page-${new Date().getTime()}.png`,
+      });
+
+      return {
+        success: false,
+        status: 'TIMEOU',
+      };
+    })
+    .catch(error => {
+      return {
+        success: false,
+        data: error.data,
+      };
+    });
 }

@@ -1,32 +1,16 @@
-import { getManager } from 'typeorm';
+export function makeQuery(status: string) {
+  switch (status) {
+    case 'USER_NOT_EXISTENT':
+    case 'BANNED':
+      return `UPDATE metrics SET attempts = attempts + 1, not_existent = not_existent + 1 WHERE metric_id = 2;`;
 
-interface QueryData {
-  _id: number;
-  status: string;
-}
+    case 'PASS_INCORRECT':
+      return `UPDATE metrics SET attempts = attempts + 1, pass_incorrect = pass_incorrect + 1 WHERE metric_id = 2;`;
 
-export async function makeQuery({ _id, status }: QueryData) {
-  const manager = getManager();
+    case 'CHECKPOINT':
+      return `UPDATE metrics SET attempts = attempts + 1, checkpoint = checkpoint + 1 WHERE metric_id = 2;`;
 
-  await manager.query(`UPDATE usuarios SET status = 3 WHERE id = ${_id};`);
-
-  if (status === 'USER_NOT_EXISTENT' || status === 'BANNED') {
-    await manager.query(
-      'UPDATE metrics SET attempts = attempts + 1, not_existent = not_existent + 1 WHERE metric_id = 3;',
-    );
-  }
-
-  if (status === 'PASS_INCORRECT') {
-    await manager.query(
-      'UPDATE metrics SET attempts = attempts + 1, pass_incorrect = pass_incorrect + 1 WHERE metric_id = 3;',
-    );
-  }
-
-  if (status === 'CHECKPOINT') {
-    await manager.query(`UPDATE usuarios SET status = 5 WHERE id = ${_id};`);
-
-    await manager.query(
-      'UPDATE metrics SET attempts = attempts + 1, checkpoint = checkpoint + 1 WHERE metric_id = 3;',
-    );
+    default:
+      return ``;
   }
 }

@@ -2,15 +2,14 @@
 import { Page } from 'puppeteer';
 
 import AppError from '../errors/app-error';
+import Sleep from '../utils/sleep';
 import { logger } from '../utils/logger';
 import { Credentials } from '../config/types';
-import { getInterfaceStatus, saveCookies } from '../controllers/auth';
-
-interface Response {
-  status: string;
-  success: boolean;
-  message: string;
-}
+import {
+  getInterfaceStatus,
+  userInterface,
+  saveCookies,
+} from '../controllers/auth';
 
 export default class Profile {
   readonly credentials: Credentials;
@@ -19,103 +18,31 @@ export default class Profile {
     this.credentials = credentials;
   }
 
-  public async _initialize(): Promise<Response> {
-    let status = await getInterfaceStatus(this.page);
-
-    // Reload page if error 500
-    if (status === 'NEW_TEST_INTERFACE_CATCH') {
-      await this.page.evaluate(() => {
-        window.location.reload();
-      });
-
-      await this.page.waitForNavigation({
-        waitUntil: 'domcontentloaded',
-      });
-
-      status = await getInterfaceStatus(this.page);
-    }
-
-    if (status === 'DISCONNECTED') {
-      status = await this.waitForLogin();
-    }
-
-    if (status === 'REACTIVATED') {
-      status = await getInterfaceStatus(this.page);
-    }
-
-    if (status === 'BANNED') {
-      return {
-        status,
-        success: false,
-        message: `The user has bem banned from instagram.`,
-      };
-    }
+  public async _initialize() {
+    const status = await getInterfaceStatus(this.page);
 
     if (status === 'CONNECTED') {
-      try {
-        await this.page.waitForSelector('input[placeholder="Search"]', {
-          visible: true,
-          timeout: 10000,
-        });
+      await this.page.waitForSelector('input[placeholder="Search"]', {
+        visible: true,
+        timeout: 10000,
+      });
 
-        await saveCookies(this.page, this.credentials.username);
-        return { status, success: true, message: `Login with success!` };
-      } catch {
-        throw new AppError(`Error on save cookies.`);
-      }
-    }
-
-    if (status === 'USER_NOT_EXISTENT') {
-      return {
-        status,
-        success: false,
-        message: `The username doesn't belong to an account.`,
-      };
-    }
-
-    if (status === 'SPAM') {
-      throw new AppError(`Try Again Later.`);
-    }
-
-    if (status === 'PASS_INCORRECT') {
-      return {
-        status,
-        success: false,
-        message: `Password was incorrect.`,
-      };
-    }
-
-    if (status === 'TWO_FACTOR') {
-      return {
-        status,
-        success: false,
-        message: `Two-factor authentication.`,
-      };
+      await saveCookies(this.page, this.credentials.username);
+      return { success: true, message: `Login with success!` };
     }
 
     if (status === 'CHECKPOINT') {
-      await saveCookies(this.page, this.credentials.username);
-
-      return {
-        status,
-        success: false,
+      throw new AppError({
+        status: `CHECKPOINT`,
         message: `Checkpoint required.`,
-      };
-    }
-
-    if (status === 'NEW_TEST_INTERFACE' || status === 'NEW_TEST_FINAL_LOGIN') {
-      await this.page.screenshot({
-        path: `temp/page-${new Date().getTime()}.png`,
       });
-
-      throw new AppError(`Try Again Later.`);
     }
 
-    return {
-      status: String(status),
-      success: false,
-      message: `NEW_TEST__initialize`,
-    };
+    if (status === 'DISCONNECTED') {
+      return this.waitForLogin();
+    }
+
+    throw new Error('TIMEOU');
   }
 
   public async getUserData() {
@@ -125,6 +52,35 @@ export default class Profile {
 
     // { id, fbid, full_name, profile_pic_url_hd, is_private, username }
     return _sharedData;
+  }
+
+  protected async verifyUserInterface() {
+    await this.page.waitForNavigation({
+      waitUntil: 'domcontentloaded',
+    });
+
+    await Sleep(200);
+    const status = await userInterface(this.page);
+
+    if (status === 'CONNECTED') {
+      await this.page.click('main section button');
+
+      await this.page.waitForNavigation({
+        waitUntil: 'domcontentloaded',
+      });
+
+      await saveCookies(this.page, this.credentials.username);
+      return { success: true, message: `Login with success!` };
+    }
+
+    if (status === 'NEW_TEST_INTERFACE') {
+      throw new Error('TIMEOU');
+    }
+
+    throw new AppError({
+      status: `CHECKPOINT`,
+      message: `Checkpoint required.`,
+    });
   }
 
   protected async waitForLogin() {
@@ -157,37 +113,57 @@ export default class Profile {
       user,
       authenticated,
       two_factor_required,
+      oneTapPrompt,
       checkpoint_url,
       reactivated,
       spam,
     } = request;
 
     if (spam || request === 'TIMEOUT') {
-      return 'SPAM';
+      throw new AppError({
+        status: `TIMEOU`,
+        message: `Try Again Later.`,
+      });
+    }
+
+    if (oneTapPrompt) {
+      return this.verifyUserInterface();
     }
 
     if (checkpoint_url) {
-      return 'CHECKPOINT';
+      throw new AppError({
+        status: `CHECKPOINT`,
+        message: `Checkpoint required.`,
+      });
     }
 
     if (two_factor_required) {
-      return 'TWO_FACTOR';
+      throw new AppError({
+        status: `TWO_FACTOR`,
+        message: `Two-factor authentication.`,
+      });
     }
 
     if (reactivated) {
-      return 'REACTIVATED';
+      return this.verifyUserInterface();
     }
 
     if (!user) {
-      return 'USER_NOT_EXISTENT';
+      throw new AppError({
+        status: `USER_NOT_EXISTENT`,
+        message: `The username doesn't belong to an account.`,
+      });
     }
 
     if (user && !authenticated) {
-      return 'PASS_INCORRECT';
+      throw new AppError({
+        status: `PASS_INCORRECT`,
+        message: `Password was incorrect.`,
+      });
     }
 
     if (user && authenticated) {
-      return 'CONNECTED';
+      return this.verifyUserInterface();
     }
 
     return 'NEW_TEST_FINAL_LOGIN';
