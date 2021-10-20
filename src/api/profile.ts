@@ -46,7 +46,8 @@ export default class Profile {
 
         await saveCookies(this.page, this.credentials.username);
         return { status, success: true, message: `Login with success!` };
-      } catch {
+      } catch (err) {
+        console.log(err);
         throw new AppError(`Error on save cookies.`);
       }
     }

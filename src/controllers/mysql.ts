@@ -12,19 +12,19 @@ export async function makeQuery({ _id, status }: QueryData) {
 
   if (status === 'USER_NOT_EXISTENT' || status === 'BANNED') {
     await manager.query(
-      'UPDATE metrics SET attempts = attempts + 1, not_existent = not_existent + 1 WHERE metric_id = 1;',
+      'UPDATE metrics SET attempts = attempts + 1, not_existent = not_existent + 1 WHERE metric_id = 3;',
     );
   }
 
   if (status === 'PASS_INCORRECT') {
     await manager.query(
-      'UPDATE metrics SET attempts = attempts + 1, pass_incorrect = pass_incorrect + 1 WHERE metric_id = 1;',
+      'UPDATE metrics SET attempts = attempts + 1, pass_incorrect = pass_incorrect + 1 WHERE metric_id = 3;',
     );
   }
 
   if (status === 'CHECKPOINT') {
     await manager.query(
-      'UPDATE metrics SET attempts = attempts + 1, checkpoint = checkpoint + 1 WHERE metric_id = 1;',
+      'UPDATE metrics SET attempts = attempts + 1, checkpoint = checkpoint + 1 WHERE metric_id = 3;',
     );
   }
 }

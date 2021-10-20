@@ -54,7 +54,7 @@ export default class HandleRelogin {
 
         if (response.success) {
           await manager.query(
-            'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 1;',
+            'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 3;',
           );
 
           logger.info(`${user.username}:${user.password} - SUCCESS`);
@@ -76,7 +76,7 @@ export default class HandleRelogin {
         logger.error(error.data?.message || error.data || error);
 
         await manager.query(
-          'UPDATE metrics SET attempts = attempts + 1, error = error + 1 WHERE metric_id = 1;',
+          'UPDATE metrics SET attempts = attempts + 1, error = error + 1 WHERE metric_id = 3;',
         );
       }
 
