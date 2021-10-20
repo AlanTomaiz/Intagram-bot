@@ -5,7 +5,7 @@ import { injectCookies } from './auth';
 
 export async function initBrowser(configs: string[]) {
   return puppeteer.launch({
-    headless: false,
+    // headless: false,
     args: [...configs],
   });
 }
@@ -42,6 +42,14 @@ export async function initInstagram(browser: Browser, username: string) {
 
       // Try auth
       await injectCookies(page, username);
+
+      await page.evaluate(() => {
+        window.location.reload();
+      });
+
+      await page.waitForNavigation({
+        waitUntil: 'domcontentloaded',
+      });
 
       return true;
     } catch (err: any) {
