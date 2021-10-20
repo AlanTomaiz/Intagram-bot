@@ -49,6 +49,8 @@ export async function create(credentials: Credentials, proxy_port?: number) {
     return response;
   } catch (err: any) {
     browser.close();
-    throw new AppError(err.data || err.message || err);
+
+    const message = err.data || err.message || err;
+    throw new AppError(`Create error: ${message}`);
   }
 }

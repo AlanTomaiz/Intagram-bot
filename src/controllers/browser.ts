@@ -5,7 +5,7 @@ import { injectCookies } from './auth';
 
 export async function initBrowser(configs: string[]) {
   return puppeteer.launch({
-    // headless: false,
+    headless: false,
     args: [...configs],
   });
 }
@@ -37,6 +37,7 @@ export async function initInstagram(browser: Browser, username: string) {
         timeout: 10000,
       });
 
+      // Set lang page
       await page.setCookie({ name: 'ig_lang', value: 'en', path: '/' });
 
       // Try auth

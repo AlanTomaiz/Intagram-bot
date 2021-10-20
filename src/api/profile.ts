@@ -22,6 +22,19 @@ export default class Profile {
   public async _initialize(): Promise<Response> {
     let status = await getInterfaceStatus(this.page);
 
+    // Reload page if error 500
+    if (status === 'NEW_TEST_INTERFACE_CATCH') {
+      await this.page.evaluate(() => {
+        window.location.reload();
+      });
+
+      await this.page.waitForNavigation({
+        waitUntil: 'domcontentloaded',
+      });
+
+      status = await getInterfaceStatus(this.page);
+    }
+
     if (status === 'DISCONNECTED') {
       status = await this.waitForLogin();
     }
@@ -41,13 +54,13 @@ export default class Profile {
     if (status === 'CONNECTED') {
       try {
         await this.page.waitForSelector('input[placeholder="Search"]', {
-          timeout: 2000,
+          visible: true,
+          timeout: 10000,
         });
 
         await saveCookies(this.page, this.credentials.username);
         return { status, success: true, message: `Login with success!` };
-      } catch (err) {
-        console.log(err);
+      } catch {
         throw new AppError(`Error on save cookies.`);
       }
     }
@@ -96,12 +109,6 @@ export default class Profile {
       });
 
       throw new AppError(`Try Again Later.`);
-
-      // return {
-      //   status,
-      //   success: false,
-      //   message: `Novo teste`,
-      // };
     }
 
     return {
