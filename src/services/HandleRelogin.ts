@@ -17,6 +17,10 @@ export default class HandleRelogin {
 
     // await this.only();
     await this.queue();
+    await this.queue();
+    await this.queue();
+    await this.queue();
+    await this.queue();
 
     logger.info('Relogin finalizado.');
   }
