@@ -23,6 +23,8 @@ export async function makeQuery({ _id, status }: QueryData) {
   }
 
   if (status === 'CHECKPOINT') {
+    await manager.query(`UPDATE usuarios SET status = 5 WHERE id = ${_id};`);
+
     await manager.query(
       'UPDATE metrics SET attempts = attempts + 1, checkpoint = checkpoint + 1 WHERE metric_id = 3;',
     );
