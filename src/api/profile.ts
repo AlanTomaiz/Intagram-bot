@@ -1,4 +1,4 @@
-/* eslint no-empty: "off" */
+/* eslint no-empty: "off", @typescript-eslint/no-empty-function: "off" */
 import { Page } from 'puppeteer';
 
 import AppError from '../errors/app-error';
@@ -45,6 +45,18 @@ export default class Profile {
     throw new Error('TIMEOU');
   }
 
+  async confirmLogin() {
+    // await this.page.evaluate(() => {
+    //   window.location.reload();
+    // });
+
+    await this.page.click('main section button');
+
+    await this.page.waitForNavigation({
+      waitUntil: 'domcontentloaded',
+    });
+  }
+
   public async getUserData() {
     const _sharedData = await this.page.evaluate(
       () => window._sharedData.config.viewer,
@@ -62,13 +74,11 @@ export default class Profile {
     await Sleep(200);
     const status = await userInterface(this.page);
 
-    if (status === 'CONNECTED') {
-      await this.page.click('main section button');
+    if (status === 'CONNECTED' || status === 'CONFIRM_CONNECTED') {
+      const fn =
+        status === 'CONFIRM_CONNECTED' ? this.confirmLogin : async () => {};
 
-      await this.page.waitForNavigation({
-        waitUntil: 'domcontentloaded',
-      });
-
+      await fn();
       await saveCookies(this.page, this.credentials.username);
       return { success: true, message: `Login with success!` };
     }
