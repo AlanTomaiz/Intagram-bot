@@ -101,9 +101,9 @@ export default class HandleRelogin {
         logger.error(message);
       }
 
-      logData(`${user.username}:${user.password}\r\n${message}`);
       await client.close();
       await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
+      logData(`${user.username}:${user.password}\r\n${message}`);
       console.log('');
     }
 
