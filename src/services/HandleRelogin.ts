@@ -1,4 +1,4 @@
-/* eslint no-plusplus: "off" */
+/* eslint no-plusplus: "off", no-continue: "off" */
 import { getCustomRepository, getManager } from 'typeorm';
 import phpRunner from 'child_process';
 import promisify from 'promisify-node';
@@ -42,7 +42,14 @@ export default class HandleRelogin {
       const { browser, page } = await create({
         username: user.username,
         proxy_port: currentProxy.port,
+      }).catch(() => {
+        return { browser: null, page: null };
       });
+
+      if (!browser || !page) {
+        logger.error(`Error open browser.`);
+        continue;
+      }
 
       const client = new Instagram({ browser, page, credentials: user });
       const { status, data, message, type } = await client.startLogin();
@@ -86,15 +93,15 @@ export default class HandleRelogin {
         }
 
         await manager.query(query);
-
-        logData(`${user.username}:${user.password}\r\n${message}`);
       }
 
       // Error
       if (status === 'error') {
+        logger.error(`${user.username}:${user.password}`);
         logger.error(message);
       }
 
+      logData(`${user.username}:${user.password}\r\n${message}`);
       await client.close();
       await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
       console.log('');

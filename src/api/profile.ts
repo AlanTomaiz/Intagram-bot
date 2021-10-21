@@ -55,9 +55,13 @@ export default class Profile {
   }
 
   async verifyUserInterface() {
-    await this.page.waitForNavigation({
-      waitUntil: 'domcontentloaded',
-    });
+    try {
+      await this.page.waitForNavigation({
+        waitUntil: 'domcontentloaded',
+      });
+    } catch {
+      throw new Error('waitForNavigation verifyUserInterface 1');
+    }
 
     await Sleep(500);
     const status = await userInterface(this.page);
@@ -65,9 +69,13 @@ export default class Profile {
     if (status === 'CONFIRM_CONNECTED') {
       await this.page.click('main section button');
 
-      await this.page.waitForNavigation({
-        waitUntil: 'domcontentloaded',
-      });
+      try {
+        await this.page.waitForNavigation({
+          waitUntil: 'domcontentloaded',
+        });
+      } catch {
+        throw new Error('waitForNavigation verifyUserInterface 2');
+      }
     }
 
     if (status === 'CONNECTED' || status === 'CONFIRM_CONNECTED') {
