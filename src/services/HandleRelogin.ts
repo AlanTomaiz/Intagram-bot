@@ -92,7 +92,7 @@ export default class HandleRelogin {
 
       // Error
       if (status === 'error') {
-        logger.error(`${user.username}:${user.password} - ${message}`);
+        logger.error(message);
       }
 
       await client.close();
