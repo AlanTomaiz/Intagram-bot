@@ -1,5 +1,4 @@
 import { initBrowser, initInstagram } from './browser';
-import AppError from '../errors/app-error';
 
 import { logger } from '../utils/logger';
 import { puppeteerConfig } from '../config/puppeteer.config';
