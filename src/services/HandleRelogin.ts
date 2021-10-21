@@ -26,8 +26,9 @@ export default class HandleRelogin {
       const { browser, page } = await create({
         username: user.username,
         proxy_port: Number(port),
-      }).catch(({ message }) => {
-        logger.error(`Error on create browser`, message);
+      }).catch(error => {
+        logger.error(error);
+
         return { browser: null, page: null };
       });
 

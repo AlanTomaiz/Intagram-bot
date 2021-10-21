@@ -37,10 +37,7 @@ export async function initInstagram(browser: Browser, username: string) {
         timeout: 10000,
       });
 
-      // Set lang page
       await page.setCookie({ name: 'ig_lang', value: 'en', path: '/' });
-
-      // Try auth
       await injectCookies(page, username);
 
       await page.evaluate(() => {
@@ -53,7 +50,7 @@ export async function initInstagram(browser: Browser, username: string) {
 
       return true;
     } catch (err: any) {
-      // console.error(err.message);
+      console.error(err.message);
       return false;
     }
   };
