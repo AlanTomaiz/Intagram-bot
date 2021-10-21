@@ -4,6 +4,8 @@ import phpRunner from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
+import Sleep from './sleep';
+
 const tempPath = path.resolve(__dirname, '..', '..', 'temp');
 
 async function removeIps() {
@@ -53,6 +55,7 @@ tcp_outgoing_address ${ip_list[count]} tasty${port}`;
   fs.writeFileSync(`${tempPath}/ip_list.conf`, ip_list.join('\n'));
 
   await execPHP('php script.php generatePorts');
+  await Sleep(500);
 }
 
 export async function getRandomPort() {
@@ -68,5 +71,5 @@ export async function getRandomPort() {
   });
 
   const lines = dataFile.split('\n');
-  return lines[Math.floor(Math.random() * lines.length)];
+  return Number(lines[Math.floor(Math.random() * lines.length)]);
 }
