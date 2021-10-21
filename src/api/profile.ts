@@ -123,7 +123,6 @@ export default class Profile {
     } = request;
 
     if (spam || request === 'TIMEOUT') {
-      console.log('TIMEOU request', request);
       throw new Error('TIMEOU');
     }
 

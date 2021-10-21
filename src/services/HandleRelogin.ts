@@ -11,10 +11,6 @@ import { logData } from '../utils/handleFiles';
 import { makeQuery } from '../controllers/mysql';
 import { getRandomPort } from '../utils/handlePorts';
 
-interface TestePort {
-  [key: number]: number;
-}
-
 export default class HandleRelogin {
   async run(): Promise<void> {
     const manager = getManager();
@@ -24,22 +20,14 @@ export default class HandleRelogin {
     logger.info('Start proccess relogin.');
     const oldUsers = await repository.index();
 
-    const testePorts: TestePort = {};
-
     for await (const user of oldUsers) {
       const port = await getRandomPort();
-
-      if (!testePorts[port]) {
-        testePorts[port] = 0;
-      }
-
-      testePorts[port]++;
 
       const { browser, page } = await create({
         username: user.username,
         proxy_port: port,
-      }).catch(error => {
-        logger.error(error);
+      }).catch(({ message }) => {
+        logger.error(message);
         console.log('');
 
         return { browser: null, page: null };
@@ -105,6 +93,5 @@ export default class HandleRelogin {
     }
 
     logger.info('Relogin finalizado.');
-    console.log(testePorts);
   }
 }
