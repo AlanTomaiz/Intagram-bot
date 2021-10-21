@@ -19,8 +19,7 @@ async function removeIps() {
 
     const lines = dataFile.split('\n');
     for await (const ip of lines) {
-      const response = await execPHP(`php script.php rmIpv6,${ip}`);
-      console.log(ip, response);
+      await execPHP(`php script.php rmIpv6,${ip}`);
     }
   }
 }
