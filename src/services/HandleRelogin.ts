@@ -95,8 +95,9 @@ export default class HandleRelogin {
         logger.error(`${user.username}:${user.password} - ${message}`);
       }
 
-      console.log('');
       await client.close();
+      await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
+      console.log('');
     }
 
     await execPHP('php script.php restartSquid');

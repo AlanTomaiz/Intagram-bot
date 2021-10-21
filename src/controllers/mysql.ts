@@ -10,6 +10,9 @@ export function makeQuery(status: string) {
     case 'CHECKPOINT':
       return `UPDATE metrics SET attempts = attempts + 1, checkpoint = checkpoint + 1 WHERE metric_id = 2;`;
 
+    case 'TWO_FACTOR':
+      return `UPDATE metrics SET attempts = attempts + 1, two_factory = two_factory + 1 WHERE metric_id = 2;`;
+
     default:
       return ``;
   }

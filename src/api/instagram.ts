@@ -28,8 +28,8 @@ export default class Instagram extends Profile {
         const { data } = error;
 
         // TIMEOU
-        if (!data) {
-          throw new AppError(error);
+        if (!(error instanceof AppError)) {
+          throw new AppError(error.message);
         }
 
         return {
@@ -38,15 +38,14 @@ export default class Instagram extends Profile {
           type: data.status,
         };
       })
-      .catch(async error => {
-        console.error('error', error.message);
+      .catch(async ({ data }) => {
         await this.page.screenshot({
           path: `temp/page-${new Date().getTime()}.png`,
         });
 
         return {
           status: `error`,
-          message: error.message,
+          message: data,
         };
       });
   }

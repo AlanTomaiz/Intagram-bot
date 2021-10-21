@@ -18,7 +18,7 @@ export default class Profile {
     this.credentials = credentials;
   }
 
-  public async _initialize() {
+  async _initialize() {
     const status = await getInterfaceStatus(this.page);
 
     if (status === 'CONNECTED') {
@@ -45,19 +45,7 @@ export default class Profile {
     throw new Error('TIMEOU');
   }
 
-  async confirmLogin() {
-    // await this.page.evaluate(() => {
-    //   window.location.reload();
-    // });
-
-    await this.page.click('main section button');
-
-    await this.page.waitForNavigation({
-      waitUntil: 'domcontentloaded',
-    });
-  }
-
-  public async getUserData() {
+  async getUserData() {
     const _sharedData = await this.page.evaluate(
       () => window._sharedData.config.viewer,
     );
@@ -66,19 +54,23 @@ export default class Profile {
     return _sharedData;
   }
 
-  protected async verifyUserInterface() {
+  async verifyUserInterface() {
     await this.page.waitForNavigation({
       waitUntil: 'domcontentloaded',
     });
 
-    await Sleep(200);
+    await Sleep(500);
     const status = await userInterface(this.page);
 
-    if (status === 'CONNECTED' || status === 'CONFIRM_CONNECTED') {
-      const fn =
-        status === 'CONFIRM_CONNECTED' ? this.confirmLogin : async () => {};
+    if (status === 'CONFIRM_CONNECTED') {
+      await this.page.click('main section button');
 
-      await fn();
+      await this.page.waitForNavigation({
+        waitUntil: 'domcontentloaded',
+      });
+    }
+
+    if (status === 'CONNECTED' || status === 'CONFIRM_CONNECTED') {
       await saveCookies(this.page, this.credentials.username);
       return { success: true, message: `Login with success!` };
     }
@@ -93,7 +85,7 @@ export default class Profile {
     });
   }
 
-  protected async waitForLogin() {
+  async waitForLogin() {
     logger.info('Initialize login...');
 
     await this.page.type('input[name="username"]', this.credentials.username);
@@ -130,10 +122,7 @@ export default class Profile {
     } = request;
 
     if (spam || request === 'TIMEOUT') {
-      throw new AppError({
-        status: `TIMEOU`,
-        message: `Try Again Later.`,
-      });
+      throw new Error('TIMEOU');
     }
 
     if (oneTapPrompt) {
