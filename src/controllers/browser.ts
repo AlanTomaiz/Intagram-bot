@@ -70,7 +70,7 @@ export async function initInstagram(browser: Browser, username: string) {
   }
 
   await page.screenshot({
-    path: `temp/erro-page-${new Date().getTime()}.png`,
+    path: `temp/page-erro-${new Date().getTime()}.png`,
   });
 
   browser.close();
