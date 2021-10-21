@@ -7,11 +7,11 @@ function randomIpv6() {
 }
 
 function rmIpv6($ip) {
-  exec("sudo ip addr del {$ip}/48 dev he-ipv6");
+  echo exec("sudo ip -6 addr del {$ip}/48 dev he-ipv6");
 }
 
 function addIpv6($ip) {
-  exec("sudo ip addr add {$ip}/48 dev he-ipv6");
+  echo exec("sudo ip addr add {$ip}/48 dev he-ipv6");
 }
 
 function generatePorts() {
@@ -28,7 +28,7 @@ function generatePorts() {
 }
 
 function reloadSquid() {
-  exec("sudo systemctl reload squid");
+  echo exec("sudo systemctl reload squid");
 }
 
 // nodejs
