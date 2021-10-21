@@ -21,14 +21,14 @@ export async function create({ username, proxy_port }: PageProps) {
   const browser = await initBrowser(browserConfigs);
 
   if (!browser) {
-    throw new AppError(`Error open browser.`);
+    throw new Error(`Error open browser.`);
   }
 
   logger.info(`Accessing page...`);
   const page = await initInstagram(browser, username);
 
   if (!page) {
-    throw new AppError(`Error accessing page.`);
+    throw new Error(`Error accessing page.`);
   }
 
   logger.info('Page successfully accessed.');
