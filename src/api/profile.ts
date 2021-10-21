@@ -63,19 +63,12 @@ export default class Profile {
     const status = await userInterface(this.page);
 
     if (status === 'CONFIRM_CONNECTED') {
-      await this.page.click('main section button');
+      // await this.page.click('main section button');
 
-      await this.page.screenshot({
-        path: `temp/page-navigation1-${new Date().getTime()}.png`,
+      await this.page.goto('https://www.instagram.com/', {
+        waitUntil: 'domcontentloaded',
+        timeout: 10000,
       });
-
-      try {
-        await this.page.waitForNavigation({
-          waitUntil: 'domcontentloaded',
-        });
-      } catch (error) {
-        throw new Error(`waitForNavigation 2 ${error.message}`);
-      }
     }
 
     if (status === 'CONNECTED' || status === 'CONFIRM_CONNECTED') {
@@ -130,6 +123,7 @@ export default class Profile {
     } = request;
 
     if (spam || request === 'TIMEOUT') {
+      console.log('TIMEOU request', request);
       throw new Error('TIMEOU');
     }
 
