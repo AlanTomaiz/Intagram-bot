@@ -4,13 +4,37 @@ import phpRunner from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
+const tempPath = path.resolve(__dirname, '..', '..', 'temp');
+
+async function removeIps() {
+  const hasFile = fs.existsSync(`${tempPath}/ip_list.conf`);
+
+  if (hasFile) {
+    const execPHP = promisify(phpRunner.exec);
+    const dataFile = fs.readFileSync(`${tempPath}/ports.conf`, {
+      encoding: 'utf-8',
+    });
+
+    const lines = dataFile.split('\n');
+    for await (const ip of lines) {
+      console.log(ip);
+      // await execPHP(`php script.php rmIpv6,${ip}`);
+    }
+  }
+}
+
 async function generatePorts() {
-  const execPHP = promisify(phpRunner.exec);
-  const phpList = await execPHP('php script.php addIpv6');
-  const ip_list = JSON.parse(phpList);
   const configPath = '/etc/squid/ports.conf';
 
+  await removeIps();
+
+  const execPHP = promisify(phpRunner.exec);
+  const phpList = await execPHP('php script.php generatePorts');
+  const ip_list = JSON.parse(phpList);
+  const port_list = [];
+
   let count = 0;
+  const ip_string = [];
   while (count < ip_list.length) {
     const port = Math.floor(8000 + count);
 
@@ -18,30 +42,32 @@ async function generatePorts() {
 http_port ${port} name=${port}
 acl tasty${port} myportname ${port} src all dst ipv6
 http_access allow tasty${port}
-tcp_outgoing_address ${ip_list[count]} tasty${port}
-    `;
+tcp_outgoing_address ${ip_list[count]} tasty${port}`;
 
-    fs.writeFileSync(configPath, string);
+    ip_string.push(string);
+    port_list.push(port);
     count++;
   }
 
-  console.log(ip_list);
+  fs.writeFileSync(configPath, ip_string.join('\n'));
+  fs.writeFileSync(`${tempPath}/ports.conf`, port_list.join('\n'));
+  fs.writeFileSync(`${tempPath}/ip_list.conf`, ip_list.join('\n'));
+
+  await execPHP('php script.php generatePorts');
 }
 
-// function removeLine() {}
-
 export async function getRandomPort() {
-  const filePath = `${path.resolve(__dirname, '..', '..')}/temp/ports.json`;
-  const hasFile = fs.existsSync(filePath);
+  const hasFile = fs.existsSync(`${tempPath}/ports.conf`);
 
   // create
   if (!hasFile) {
-    fs.writeFileSync(filePath, '');
-  }
-
-  const line = fs.readFileSync(filePath, { encoding: 'utf-8' });
-
-  if (line.length === 0) {
     await generatePorts();
   }
+
+  const dataFile = fs.readFileSync(`${tempPath}/ports.conf`, {
+    encoding: 'utf-8',
+  });
+
+  const lines = dataFile.split('\n');
+  return lines[Math.floor(Math.random() * lines.length)];
 }

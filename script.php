@@ -19,12 +19,16 @@ function generatePorts() {
 
   while (count($ipList) < GENERATE_QUANT_IPS) {
     $ip = randomIpv6();
+    $ipList[] = $ip;
 
     // addIpv6($ip);
-    $ipList[] = $ip;
   }
 
   echo json_encode($ipList);
+}
+
+function reloadSquid() {
+  exec("sudo systemctl reload squid");
 }
 
 // nodejs
