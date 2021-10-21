@@ -13,25 +13,19 @@ import { getRandomPort } from '../utils/handlePorts';
 
 export default class HandleRelogin {
   async run(): Promise<void> {
-    logger.info('Start proccess relogin.');
-
-    await this.only();
-    // await this.queue();
-
-    logger.info('Relogin finalizado.');
-  }
-
-  async queue(): Promise<void> {
     const manager = getManager();
-
-    const userRepository = getCustomRepository(AccountRepository);
     const repository = getCustomRepository(OldAccountsRepository);
+    const userRepository = getCustomRepository(AccountRepository);
+
+    logger.info('Start proccess relogin.');
     const oldUsers = await repository.index();
 
     for await (const user of oldUsers) {
+      const port = await getRandomPort();
+
       const { browser, page } = await create({
         username: user.username,
-        // proxy_port: currentProxy.port,
+        proxy_port: Number(port),
       }).catch(() => {
         return { browser: null, page: null };
       });
@@ -48,41 +42,41 @@ export default class HandleRelogin {
       if (status === 'success') {
         logger.info(`${user.username}:${user.password} - SUCCESS`);
 
-        // await manager.query(
-        //   'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 2;',
-        // );
+        await manager.query(
+          'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 2;',
+        );
 
-        // const { id, fbid, profile_pic_url_hd, username } = data;
+        const { id, fbid, profile_pic_url_hd, username } = data;
 
-        // const newUser = {
-        //   fbid,
-        //   instaid: id,
-        //   avatar: profile_pic_url_hd,
-        //   account_user: user.username,
-        //   account_pass: user.password,
-        //   username,
-        // };
+        const newUser = {
+          fbid,
+          instaid: id,
+          avatar: profile_pic_url_hd,
+          account_user: user.username,
+          account_pass: user.password,
+          username,
+        };
 
-        // const saveData = userRepository.create(newUser);
-        // await userRepository.save(saveData);
+        const saveData = userRepository.create(newUser);
+        await userRepository.save(saveData);
       }
 
       // Checkpoint
       if (status === 'checkpoint') {
         logger.error(`${user.username}:${user.password} - ${type}`);
 
-        // let query = makeQuery(String(type));
-        // await manager.query(query);
+        let query = makeQuery(String(type));
+        await manager.query(query);
 
-        // // Update usuarios table
-        // query = `UPDATE usuarios SET status = 3 WHERE id = ${user.id};`;
+        // Update usuarios table
+        query = `UPDATE usuarios SET status = 3 WHERE id = ${user.id};`;
 
-        // // Checkpoint
-        // if (type === 'CHECKPOINT') {
-        //   query = `UPDATE usuarios SET status = 5 WHERE id = ${user.id};`;
-        // }
+        // Checkpoint
+        if (type === 'CHECKPOINT') {
+          query = `UPDATE usuarios SET status = 5 WHERE id = ${user.id};`;
+        }
 
-        // await manager.query(query);
+        await manager.query(query);
       }
 
       // Error
@@ -91,16 +85,11 @@ export default class HandleRelogin {
         logger.error(message);
       }
 
-      // await client.close();
-      // await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
+      await client.close();
       logData(`${user.username}:${user.password}\r\n${message}`);
       console.log('');
     }
 
-    // await execPHP('php script.php restartSquid');
-  }
-
-  async only() {
-    const port = await getRandomPort();
+    logger.info('Relogin finalizado.');
   }
 }

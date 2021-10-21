@@ -11,14 +11,13 @@ async function removeIps() {
 
   if (hasFile) {
     const execPHP = promisify(phpRunner.exec);
-    const dataFile = fs.readFileSync(`${tempPath}/ports.conf`, {
+    const dataFile = fs.readFileSync(`${tempPath}/ip_list.conf`, {
       encoding: 'utf-8',
     });
 
     const lines = dataFile.split('\n');
     for await (const ip of lines) {
-      console.log(ip);
-      // await execPHP(`php script.php rmIpv6,${ip}`);
+      await execPHP(`php script.php rmIpv6,${ip}`);
     }
   }
 }

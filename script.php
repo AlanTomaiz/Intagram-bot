@@ -21,7 +21,7 @@ function generatePorts() {
     $ip = randomIpv6();
     $ipList[] = $ip;
 
-    // addIpv6($ip);
+    addIpv6($ip);
   }
 
   echo json_encode($ipList);
