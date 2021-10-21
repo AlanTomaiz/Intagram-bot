@@ -6,6 +6,7 @@ import promisify from 'promisify-node';
 import AccountRepository from '../repositories/AccountRepository';
 import OldAccountsRepository from '../repositories/OldAccountRepository';
 
+import Instagram from '../api/instagram';
 import { create } from '../controllers/initializer';
 import { logger } from '../utils/logger';
 import { logData } from '../utils/handleFiles';
@@ -37,16 +38,24 @@ export default class HandleRelogin {
 
     for await (const user of oldUsers) {
       const currentProxy = proxies[count++];
-      const response = await create(user, currentProxy.port);
 
-      if (response.success) {
+      const { browser, page } = await create({
+        username: user.username,
+        proxy_port: currentProxy.port,
+      });
+
+      const client = new Instagram({ browser, page, credentials: user });
+      const { status, data, message, type } = await client.startLogin();
+
+      // Usuário logado
+      if (status === 'success') {
         logger.info(`${user.username}:${user.password} - SUCCESS`);
 
         await manager.query(
           'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 2;',
         );
 
-        const { id, fbid, profile_pic_url_hd, username } = response.data;
+        const { id, fbid, profile_pic_url_hd, username } = data;
 
         const newUser = {
           fbid,
@@ -61,35 +70,33 @@ export default class HandleRelogin {
         await userRepository.save(saveData);
       }
 
-      // Error
-      if (response.success === false && response.data) {
-        const { status } = response.data;
-        logger.error(`${user.username}:${user.password} - ${status}`);
+      // Checkpoint
+      if (status === 'checkpoint') {
+        logger.error(`${user.username}:${user.password} - ${type}`);
 
-        let query = makeQuery(status);
+        let query = makeQuery(String(type));
         await manager.query(query);
 
         // Update usuarios table
         query = `UPDATE usuarios SET status = 3 WHERE id = ${user.id};`;
 
         // Checkpoint
-        if (status === 'CHECKPOINT') {
+        if (type === 'CHECKPOINT') {
           query = `UPDATE usuarios SET status = 5 WHERE id = ${user.id};`;
         }
 
         await manager.query(query);
 
-        logData(
-          `${user.username}:${user.password} \r\n ${JSON.stringify(response)}`,
-        );
+        logData(`${user.username}:${user.password}\r\n${message}`);
       }
 
-      if (response.status) {
-        logger.error(`${user.username}:${user.password} - ${response.status}`);
+      // Error
+      if (status === 'error') {
+        logger.error(`${user.username}:${user.password} - ${message}`);
       }
 
       console.log('');
-      await execPHP(`php script.php rmIpv6,${currentProxy.ip}`);
+      await client.close();
     }
 
     await execPHP('php script.php restartSquid');

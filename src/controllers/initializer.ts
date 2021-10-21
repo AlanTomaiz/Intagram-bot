@@ -1,21 +1,15 @@
 import { initBrowser, initInstagram } from './browser';
 import AppError from '../errors/app-error';
-import Instagram from '../api/instagram';
 
 import { logger } from '../utils/logger';
-import { Credentials } from '../config/types';
 import { puppeteerConfig } from '../config/puppeteer.config';
 
-interface Response {
-  success: boolean;
-  status?: string;
-  data?: any;
+interface PageProps {
+  username: string;
+  proxy_port?: number;
 }
 
-export async function create(
-  credentials: Credentials,
-  proxy_port?: number,
-): Promise<Response> {
+export async function create({ username, proxy_port }: PageProps) {
   const browserConfigs = [...puppeteerConfig];
 
   // Config proxy
@@ -31,51 +25,13 @@ export async function create(
   }
 
   logger.info(`Accessing page...`);
-  const page = await initInstagram(browser, credentials.username);
+  const page = await initInstagram(browser, username);
 
   if (!page) {
     throw new AppError(`Error accessing page.`);
   }
 
   logger.info('Page successfully accessed.');
-  const instagram = new Instagram(page, credentials);
 
-  return instagram
-    ._initialize()
-    .then(async () => {
-      const user = await instagram.getUserData();
-      browser.close();
-
-      const { id, fbid, profile_pic_url_hd, username } = user;
-
-      return {
-        success: true,
-        data: { id, fbid, profile_pic_url_hd, username },
-      };
-    })
-    .catch(async error => {
-      browser.close();
-      const { data } = error;
-
-      if (data) {
-        throw new AppError(data);
-      }
-
-      // TIMEOU
-      console.error('error', error.message);
-      await page.screenshot({
-        path: `temp/page-${new Date().getTime()}.png`,
-      });
-
-      return {
-        success: false,
-        status: 'TIMEOU',
-      };
-    })
-    .catch(error => {
-      return {
-        success: false,
-        data: error.data,
-      };
-    });
+  return { browser, page };
 }
