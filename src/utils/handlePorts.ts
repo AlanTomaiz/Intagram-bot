@@ -24,7 +24,7 @@ async function removeIps() {
   }
 }
 
-async function generatePorts() {
+export async function generatePorts() {
   const configPath = '/etc/squid/ports.conf';
 
   await removeIps();

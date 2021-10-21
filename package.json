@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "typeorm": "ts-node-dev node_modules/typeorm/cli.js",
+    "squid": "ts-node-dev src/utils/reloadSquid.ts",
     "dev:server": "ts-node-dev --transpile-only --ignore-watch node_modules src/server.ts"
   },
   "dependencies": {
