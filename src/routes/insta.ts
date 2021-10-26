@@ -24,12 +24,12 @@ InstaRoutes.get('/relogin/', async (request, response) => {
 });
 
 InstaRoutes.post('/login', async (request, response) => {
-  const { username, password } = request.body;
+  const { username, password, code } = request.body;
 
   const service = new HandleLogin();
-  await service.run({ user: username, pass: password });
+  const user = await service.run({ username, password, code });
 
-  return response.send();
+  return response.send({ status: 'success', user });
 });
 
 export default InstaRoutes;

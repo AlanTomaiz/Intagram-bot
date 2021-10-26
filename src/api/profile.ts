@@ -14,8 +14,11 @@ import {
 export default class Profile {
   readonly credentials: Credentials;
 
-  constructor(public page: Page, credentials: Credentials) {
+  readonly only_relogin: boolean;
+
+  constructor(public page: Page, credentials: Credentials, relogin = false) {
     this.credentials = credentials;
+    this.only_relogin = relogin;
   }
 
   async _initialize() {
@@ -101,16 +104,9 @@ export default class Profile {
         { timeout: 10000 },
       )
       .then(response => response.json())
-      .catch(err => {
-        if (String(err).includes('Timeout')) {
-          return 'TIMEOUT';
-        }
-
-        console.error('request error', err);
-        return 'ERROR_LOGIN';
+      .catch(() => {
+        throw new Error('TIMEOU');
       });
-
-    // console.log('waitForLogin request', request);
 
     const {
       user,
@@ -131,10 +127,7 @@ export default class Profile {
     }
 
     if (checkpoint_url) {
-      throw new AppError({
-        status: `CHECKPOINT`,
-        message: `Checkpoint required.`,
-      });
+      return this.HandleRequestCheckpoint();
     }
 
     if (two_factor_required) {
@@ -167,5 +160,97 @@ export default class Profile {
     }
 
     return 'NEW_TEST_FINAL_LOGIN';
+  }
+
+  async HandleRequestCheckpoint() {
+    if (this.only_relogin) {
+      throw new AppError({
+        status: `CHECKPOINT`,
+        message: `Checkpoint required.`,
+      });
+    }
+
+    // Start checkpoint actions
+    await this.page.waitForNavigation({
+      waitUntil: 'domcontentloaded',
+    });
+
+    //
+    const recaptcha = await this.page.$('#recaptcha-input');
+    if (recaptcha) {
+      throw new AppError({
+        status: `DISABLED`,
+        message: `Your Account Has Been Disabled.`,
+      });
+    }
+
+    await this.page.waitForSelector('form', { timeout: 10000 });
+    const sendButton = (
+      await this.page.$x('//button[text()="Send Security Code"]')
+    )[0];
+
+    if (!sendButton) {
+      throw new AppError({
+        status: `CHECKPOINT`,
+        message: `Checkpoint required.`,
+      });
+    }
+
+    await sendButton.click();
+
+    // -- Aguardando dados do challenge
+    try {
+      await this.page.waitForResponse(
+        response =>
+          response.url().includes('challenge/') &&
+          response.request().method() === 'POST',
+        { timeout: 10000 },
+      );
+
+      await saveCookies(this.page, this.credentials.username);
+
+      throw new AppError({
+        status: `CODE_CHECKPOINT`,
+        message: `Checkpoint required.`,
+      });
+    } catch {
+      throw new Error('TIMEOU');
+    }
+  }
+
+  async ConfirmCheckpoint(code: string) {
+    await Sleep(500);
+    const sendButton = (await this.page.$x('//button[text()="Submit"]'))[0];
+    await this.page.type('input[id="security_code"]', code);
+
+    if (!sendButton) {
+      throw new Error('TIMEOU');
+    }
+
+    await sendButton.click();
+
+    // -- Aguardando dados do challenge
+    try {
+      await this.page.waitForResponse(
+        response =>
+          response.url().includes('challenge/') &&
+          response.request().method() === 'POST' &&
+          response.status() === 200,
+        { timeout: 10000 },
+      );
+
+      return this.verifyUserInterface();
+      // await saveCookies(this.page, this.credentials.username);
+
+      // throw new AppError({
+      //   status: `CODE_CHECKPOINT`,
+      //   message: `Checkpoint required.`,
+      // });
+    } catch {
+      throw new AppError({
+        status: `CODE_ERROR`,
+        message: `Invalid code.`,
+      });
+    }
   }
 }

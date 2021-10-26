@@ -1,6 +1,5 @@
 interface Data {
-  message?: string;
-  status?: string;
+  [key: string]: string;
 }
 
 export default class AppError {

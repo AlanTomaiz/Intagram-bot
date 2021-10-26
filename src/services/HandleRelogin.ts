@@ -37,7 +37,13 @@ export default class HandleRelogin {
         continue;
       }
 
-      const client = new Instagram({ browser, page, credentials: user });
+      const client = new Instagram({
+        browser,
+        page,
+        credentials: user,
+        relogin: true,
+      });
+
       const { status, data, message, type } = await client.startLogin();
 
       // Usuário logado
@@ -48,7 +54,7 @@ export default class HandleRelogin {
           'UPDATE metrics SET attempts = attempts + 1, connected = connected + 1 WHERE metric_id = 1;',
         );
 
-        const { id, fbid, profile_pic_url_hd, username } = data;
+        const { id, fbid, profile_pic_url_hd } = data;
 
         const newUser = {
           fbid,
@@ -56,7 +62,6 @@ export default class HandleRelogin {
           avatar: profile_pic_url_hd,
           account_user: user.username,
           account_pass: user.password,
-          username,
         };
 
         const saveData = userRepository.create(newUser);

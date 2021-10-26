@@ -50,7 +50,7 @@ export async function initInstagram(browser: Browser, username: string) {
 
       return true;
     } catch (err: any) {
-      // console.error(err.message);
+      console.error(err.message);
       return false;
     }
   };

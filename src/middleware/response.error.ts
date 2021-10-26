@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+
 import AppError from '../errors/app-error';
 import RequestError from '../errors/request-error';
 
@@ -13,6 +14,10 @@ const HandleError = (
       err.message || 'Erro ao executar esta operação, tente novamente.';
 
     return res.status(err.statusCode).json({ status: 'error', message });
+  }
+
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({ status: 'error', data: err.data });
   }
 
   return res

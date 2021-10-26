@@ -5,8 +5,8 @@ import Profile from './profile';
 export default class Instagram extends Profile {
   browser;
 
-  constructor({ browser, page, credentials }: InstagramProps) {
-    super(page, credentials);
+  constructor({ browser, page, credentials, relogin }: InstagramProps) {
+    super(page, credentials, relogin);
 
     this.browser = browser;
   }
@@ -29,7 +29,7 @@ export default class Instagram extends Profile {
 
         // TIMEOU
         if (!(error instanceof AppError)) {
-          throw new AppError(error.message);
+          throw new Error(error.message);
         }
 
         return {
@@ -38,15 +38,12 @@ export default class Instagram extends Profile {
           type: data.status,
         };
       })
-      .catch(async ({ data }) => {
+      .catch(async ({ message }) => {
         await this.page.screenshot({
           path: `temp/page-${new Date().getTime()}.png`,
         });
 
-        return {
-          status: `error`,
-          message: data,
-        };
+        return { status: `error`, message };
       });
   }
 
