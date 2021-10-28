@@ -58,9 +58,11 @@ export default class Profile {
   }
 
   async verifyUserInterface() {
-    await this.page.waitForNavigation({
-      waitUntil: 'domcontentloaded',
-    });
+    try {
+      await this.page.waitForNavigation({
+        waitUntil: 'domcontentloaded',
+      });
+    } catch {}
 
     await Sleep(500);
     const status = await userInterface(this.page);
@@ -80,6 +82,10 @@ export default class Profile {
     }
 
     if (status === 'NEW_TEST_INTERFACE') {
+      await this.page.screenshot({
+        path: `temp/page-verify-interface-${new Date().getTime()}.png`,
+      });
+
       throw new Error('TIMEOU');
     }
 
@@ -185,9 +191,18 @@ export default class Profile {
     }
 
     await this.page.waitForSelector('form', { timeout: 10000 });
+
+    const submitButton = (await this.page.$x('//button[text()="Submit"]'))[0];
     const sendButton = (
       await this.page.$x('//button[text()="Send Security Code"]')
     )[0];
+
+    if (!sendButton && submitButton) {
+      throw new AppError({
+        status: `CODE_CHECKPOINT`,
+        message: `Checkpoint required.`,
+      });
+    }
 
     if (!sendButton) {
       throw new AppError({
@@ -199,58 +214,42 @@ export default class Profile {
     await sendButton.click();
 
     // -- Aguardando dados do challenge
-    try {
-      await this.page.waitForResponse(
-        response =>
-          response.url().includes('challenge/') &&
-          response.request().method() === 'POST',
-        { timeout: 10000 },
-      );
+    await this.page.waitForResponse(
+      response =>
+        response.url().includes('challenge/') &&
+        response.request().method() === 'POST',
+      { timeout: 10000 },
+    );
 
-      await saveCookies(this.page, this.credentials.username);
+    await saveCookies(this.page, this.credentials.username);
 
-      throw new AppError({
-        status: `CODE_CHECKPOINT`,
-        message: `Checkpoint required.`,
-      });
-    } catch {
-      throw new Error('TIMEOU');
-    }
+    throw new AppError({
+      status: `CODE_CHECKPOINT`,
+      message: `Checkpoint required.`,
+    });
   }
 
   async ConfirmCheckpoint(code: string) {
     await Sleep(500);
-    const sendButton = (await this.page.$x('//button[text()="Submit"]'))[0];
+
+    const submitButton = (await this.page.$x('//button[text()="Submit"]'))[0];
     await this.page.type('input[id="security_code"]', code);
 
-    if (!sendButton) {
+    if (!submitButton) {
       throw new Error('TIMEOU');
     }
 
-    await sendButton.click();
+    await submitButton.click();
 
     // -- Aguardando dados do challenge
-    try {
-      await this.page.waitForResponse(
-        response =>
-          response.url().includes('challenge/') &&
-          response.request().method() === 'POST' &&
-          response.status() === 200,
-        { timeout: 10000 },
-      );
+    await this.page.waitForResponse(
+      response =>
+        response.url().includes('challenge/') &&
+        response.request().method() === 'POST' &&
+        response.status() === 200,
+      { timeout: 10000 },
+    );
 
-      return this.verifyUserInterface();
-      // await saveCookies(this.page, this.credentials.username);
-
-      // throw new AppError({
-      //   status: `CODE_CHECKPOINT`,
-      //   message: `Checkpoint required.`,
-      // });
-    } catch {
-      throw new AppError({
-        status: `CODE_ERROR`,
-        message: `Invalid code.`,
-      });
-    }
+    return this.verifyUserInterface();
   }
 }

@@ -17,8 +17,10 @@ const HandleError = (
   }
 
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({ status: 'error', data: err.data });
+    return res.status(err.statusCode).json(err.data);
   }
+
+  console.log('error geral', res);
 
   return res
     .status(500)
