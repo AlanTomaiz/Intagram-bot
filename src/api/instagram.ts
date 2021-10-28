@@ -15,7 +15,6 @@ export default class Instagram extends Profile {
     return this._initialize()
       .then(async () => {
         const user = await this.getUserData();
-
         const { id, fbid, profile_pic_url_hd, username } = user;
 
         return {
@@ -26,24 +25,14 @@ export default class Instagram extends Profile {
       })
       .catch(async error => {
         const { data } = error;
+        await this.close();
 
         // TIMEOU
         if (!(error instanceof AppError)) {
           throw new Error(error.message);
         }
 
-        return {
-          status: `checkpoint`,
-          message: data.message,
-          type: data.status,
-        };
-      })
-      .catch(async ({ message }) => {
-        await this.page.screenshot({
-          path: `temp/page-${new Date().getTime()}.png`,
-        });
-
-        return { status: `error`, message };
+        throw new AppError(data);
       });
   }
 

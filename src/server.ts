@@ -11,6 +11,7 @@ import InstaRoutes from './routes/insta';
 const app = express();
 const PORT = 3333;
 
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.get('/', (request, response) => {
