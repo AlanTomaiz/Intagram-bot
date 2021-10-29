@@ -25,6 +25,8 @@ export default class Profile {
     const status = await getInterfaceStatus(this.page);
 
     if (status === 'CONNECTED') {
+      logger.info('Login with success!');
+
       await this.page.waitForSelector('input[placeholder="Search"]', {
         visible: true,
         timeout: 10000,
@@ -35,6 +37,8 @@ export default class Profile {
     }
 
     if (status === 'CHECKPOINT') {
+      logger.info('Checkpoint required.');
+
       throw new AppError({
         status: `CHECKPOINT`,
         message: `Checkpoint required.`,
@@ -45,6 +49,7 @@ export default class Profile {
       return this.waitForLogin();
     }
 
+    logger.info('TIMEOU.');
     throw new Error('TIMEOU');
   }
 
@@ -77,6 +82,8 @@ export default class Profile {
     }
 
     if (status === 'CONNECTED' || status === 'CONFIRM_CONNECTED') {
+      logger.info('Login with success!');
+
       await saveCookies(this.page, this.credentials.username);
       return { success: true, message: `Login with success!` };
     }
@@ -86,9 +93,11 @@ export default class Profile {
         path: `temp/page-verify-interface-${new Date().getTime()}.png`,
       });
 
+      logger.info('TIMEOU.');
       throw new Error('TIMEOU');
     }
 
+    logger.info('Checkpoint required.');
     throw new AppError({
       status: `CHECKPOINT`,
       message: `Checkpoint required.`,
@@ -125,6 +134,7 @@ export default class Profile {
     } = request;
 
     if (spam || request === 'TIMEOUT') {
+      logger.info('TIMEOU.');
       throw new Error('TIMEOU');
     }
 
@@ -169,6 +179,8 @@ export default class Profile {
   }
 
   async HandleRequestCheckpoint() {
+    logger.info('Checkpoint required.');
+
     if (this.only_relogin) {
       throw new AppError({
         status: `CHECKPOINT`,

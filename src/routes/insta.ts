@@ -3,6 +3,7 @@ import { Router } from 'express';
 import HandleLogin from '../services/HandleLogin';
 import HandleCookies from '../services/HandleCookies';
 import HandleRelogin from '../services/HandleRelogin';
+import HandleCheckpoint from '../services/HandleCheckpoint';
 
 const InstaRoutes = Router();
 
@@ -24,18 +25,21 @@ InstaRoutes.get('/relogin/', async (request, response) => {
 });
 
 InstaRoutes.post('/login/', async (request, response) => {
-  const { username, password, code } = request.body;
+  const { username, password } = request.body;
 
   const service = new HandleLogin();
-  const user = await service.run({ username, password, code });
+  const user = await service.run({ username, password });
 
   return response.send({ status: 'success', user });
 });
 
 InstaRoutes.post('/checkpoint/', async (request, response) => {
-  console.log(request.body);
+  const { username, password, code } = request.body;
 
-  return response.send({ status: 'success' });
+  const service = new HandleCheckpoint();
+  const user = await service.run({ username, password, code });
+
+  return response.send({ status: 'success', user });
 });
 
 export default InstaRoutes;
