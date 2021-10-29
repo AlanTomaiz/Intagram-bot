@@ -49,8 +49,7 @@ export async function initInstagram(browser: Browser, username: string) {
       });
 
       return true;
-    } catch (err: any) {
-      console.error('collectData', err.message);
+    } catch {
       return false;
     }
   };

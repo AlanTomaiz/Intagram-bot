@@ -3,8 +3,8 @@ import { Page } from 'puppeteer';
 
 import AppError from '../errors/app-error';
 import Sleep from '../utils/sleep';
-import { logger } from '../utils/logger';
 import { Credentials } from '../config/types';
+
 import {
   getInterfaceStatus,
   userInterface,
@@ -25,8 +25,6 @@ export default class Profile {
     const status = await getInterfaceStatus(this.page);
 
     if (status === 'CONNECTED') {
-      logger.info('Login with success!');
-
       await this.page.waitForSelector('input[placeholder="Search"]', {
         visible: true,
         timeout: 10000,
@@ -37,8 +35,6 @@ export default class Profile {
     }
 
     if (status === 'CHECKPOINT') {
-      logger.info('Checkpoint required.');
-
       throw new AppError({
         status: `CHECKPOINT`,
         message: `Checkpoint required.`,
@@ -48,13 +44,12 @@ export default class Profile {
     if (status === 'DISCONNECTED') {
       return this.waitForLogin();
     }
-
-    logger.info('TIMEOU.');
     throw new Error('TIMEOU');
   }
 
   async getUserData() {
     const _sharedData = await this.page.evaluate(
+      // @ts-expect-error Error de type
       () => window._sharedData.config.viewer,
     );
 
@@ -82,8 +77,6 @@ export default class Profile {
     }
 
     if (status === 'CONNECTED' || status === 'CONFIRM_CONNECTED') {
-      logger.info('Login with success!');
-
       await saveCookies(this.page, this.credentials.username);
       return { success: true, message: `Login with success!` };
     }
@@ -93,11 +86,9 @@ export default class Profile {
         path: `temp/page-verify-interface-${new Date().getTime()}.png`,
       });
 
-      logger.info('TIMEOU.');
       throw new Error('TIMEOU');
     }
 
-    logger.info('Checkpoint required.');
     throw new AppError({
       status: `CHECKPOINT`,
       message: `Checkpoint required.`,
@@ -105,7 +96,7 @@ export default class Profile {
   }
 
   async waitForLogin() {
-    logger.info('Initialize login...');
+    await this.page.waitForSelector('input[name="username"]');
 
     await this.page.type('input[name="username"]', this.credentials.username);
     await this.page.type('input[name="password"]', this.credentials.password);
@@ -134,7 +125,6 @@ export default class Profile {
     } = request;
 
     if (spam || request === 'TIMEOUT') {
-      logger.info('TIMEOU.');
       throw new Error('TIMEOU');
     }
 
@@ -179,8 +169,6 @@ export default class Profile {
   }
 
   async HandleRequestCheckpoint() {
-    logger.info('Checkpoint required.');
-
     if (this.only_relogin) {
       throw new AppError({
         status: `CHECKPOINT`,
@@ -254,13 +242,21 @@ export default class Profile {
     await submitButton.click();
 
     // -- Aguardando dados do challenge
-    await this.page.waitForResponse(
-      response =>
-        response.url().includes('challenge/') &&
-        response.request().method() === 'POST' &&
-        response.status() === 200,
-      { timeout: 10000 },
-    );
+    const { status } = await this.page
+      .waitForResponse(
+        response =>
+          response.url().includes('challenge/') &&
+          response.request().method() === 'POST',
+        { timeout: 10000 },
+      )
+      .then(response => response.json());
+
+    if (status === 'fail') {
+      throw new AppError({
+        status: `ERROR_CHECKPOINT`,
+        message: `Please check the code and try again.`,
+      });
+    }
 
     return this.verifyUserInterface();
   }
