@@ -7,6 +7,7 @@ import { create } from '../controllers/initializer';
 import { Credentials } from '../config/types';
 import { logger } from '../utils/logger';
 import { getRandomPort } from '../utils/handlePorts';
+import { setSession } from '../utils/handleSession';
 
 interface Checkpoint extends Credentials {
   code: string;
@@ -19,9 +20,8 @@ export default class HandleCheckpoint {
     const manager = getManager();
     const credentials = { username, password };
 
-    // const port = await getRandomPort();
-    // const { browser, page } = await create({ username, proxy_port: port });
-    const { browser, page } = await create({ username });
+    const port = await getRandomPort();
+    const { browser, page } = await create({ username, proxy_port: port });
 
     const client = new Instagram({ browser, page, credentials });
     const response = await client.waitForLogin().catch(error => {
@@ -52,7 +52,12 @@ export default class HandleCheckpoint {
       });
     }
 
-    const { success } = await client.ConfirmCheckpoint(code);
+    const { success } = await client.ConfirmCheckpoint(code).catch(error => {
+      const error_message = error.data.message || error.message;
+
+      logger.error(`Catch checkpoint: ${error_message}`);
+      return { success: false };
+    });
 
     if (!success) {
       await page.screenshot({
@@ -76,10 +81,13 @@ export default class HandleCheckpoint {
 
     await client.close();
 
-    return {
+    const session = {
       user_id: id,
       user_name: full_name || username,
       user_avatar: profile_pic_url_hd,
     };
+
+    await setSession(session);
+    return session;
   }
 }

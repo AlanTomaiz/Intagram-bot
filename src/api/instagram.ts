@@ -1,4 +1,5 @@
 import { InstagramProps, ResponseLogin } from '../config/types';
+import { logger } from '../utils/logger';
 import AppError from '../errors/app-error';
 import Profile from './profile';
 
@@ -37,6 +38,7 @@ export default class Instagram extends Profile {
   }
 
   async close() {
+    logger.info('Close browser.');
     this.browser.close();
   }
 }

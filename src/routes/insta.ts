@@ -1,18 +1,10 @@
 import { Router } from 'express';
 
 import HandleLogin from '../services/HandleLogin';
-import HandleCookies from '../services/HandleCookies';
 import HandleRelogin from '../services/HandleRelogin';
 import HandleCheckpoint from '../services/HandleCheckpoint';
 
 const InstaRoutes = Router();
-
-InstaRoutes.get('/relogin/cookies/', async (request, response) => {
-  const serviceCookies = new HandleCookies();
-  await serviceCookies.run();
-
-  return response.send();
-});
 
 InstaRoutes.get('/relogin/', async (request, response) => {
   const serviceRelogin = new HandleRelogin();

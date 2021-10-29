@@ -12,8 +12,8 @@ const HandleError = (
   _: NextFunction,
 ) => {
   // @ts-expect-error Error de type
-  const error_message = err.data.message || err.message;
-  logger.error('Process error', error_message);
+  const error_message = err.data?.message || err.message || err;
+  logger.error(`Process error: ${error_message}`);
 
   if (err instanceof RequestError) {
     const message =
