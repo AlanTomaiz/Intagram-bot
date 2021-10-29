@@ -23,13 +23,19 @@ InstaRoutes.get('/relogin/', async (request, response) => {
   });
 });
 
-InstaRoutes.post('/login', async (request, response) => {
+InstaRoutes.post('/login/', async (request, response) => {
   const { username, password, code } = request.body;
 
   const service = new HandleLogin();
   const user = await service.run({ username, password, code });
 
   return response.send({ status: 'success', user });
+});
+
+InstaRoutes.post('/checkpoint/', async (request, response) => {
+  console.log(request.body);
+
+  return response.send({ status: 'success' });
 });
 
 export default InstaRoutes;
