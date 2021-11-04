@@ -8,20 +8,15 @@ export default class Instagram extends Profile {
 
   constructor({ browser, page, credentials, relogin }: InstagramProps) {
     super(page, credentials, relogin);
-
     this.browser = browser;
   }
 
   async startLogin(): Promise<ResponseLogin> {
     return this._initialize()
       .then(async () => {
-        const user = await this.getUserData();
-        const { id, fbid, profile_pic_url_hd, username } = user;
-
         return {
           status: `success`,
           message: `User connected with success!!!`,
-          data: { id, fbid, profile_pic_url_hd, username },
         };
       })
       .catch(async error => {

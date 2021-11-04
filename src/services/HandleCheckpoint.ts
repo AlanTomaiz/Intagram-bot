@@ -1,13 +1,14 @@
 import { getManager } from 'typeorm';
+import { sign } from 'jsonwebtoken';
 
 import AppError from '../errors/app-error';
 import Instagram from '../api/instagram';
 import { create } from '../controllers/initializer';
 
+import authConfig from '../config/auth';
 import { Credentials } from '../config/types';
 import { logger } from '../utils/logger';
 import { getRandomPort } from '../utils/handlePorts';
-import { setSession } from '../utils/handleSession';
 
 interface Checkpoint extends Credentials {
   code: string;
@@ -15,7 +16,10 @@ interface Checkpoint extends Credentials {
 
 export default class HandleCheckpoint {
   async run({ username, password, code }: Checkpoint): Promise<any> {
+    console.log('');
     logger.info('Start proccess checkpoint...');
+
+    const { secret, expiresIn } = authConfig;
 
     const manager = getManager();
     const credentials = { username, password };
@@ -71,23 +75,40 @@ export default class HandleCheckpoint {
       });
     }
 
-    const user = await client.getUserData();
-    const { id, fbid, profile_pic_url_hd, full_name } = user;
+    const {
+      id,
+      fbid,
+      full_name,
+      is_private,
+      biography,
+      following,
+      followers,
+      publications,
+    } = await client.getUserData();
 
     await manager.query(`INSERT INTO accounts
-    (account_user, account_pass, instaid, fbid, avatar)
-    VALUES ('${username}', '${password}', '${id}', '${fbid}', '${profile_pic_url_hd}')
+    (account_user, account_pass, instaid, fbid)
+    VALUES ('${username}', '${password}', '${id}', '${fbid}')
     ON DUPLICATE KEY UPDATE account_pass='${password}';`);
 
     await client.close();
+    const token = sign({}, secret, {
+      subject: id,
+      expiresIn,
+    });
 
-    const session = {
+    const user = {
       user_id: id,
+      username,
+      biography,
+      is_private,
+      following,
+      followers,
+      publications,
       user_name: full_name || username,
-      user_avatar: profile_pic_url_hd,
     };
 
-    await setSession(session);
-    return session;
+    console.log('');
+    return { user, token };
   }
 }

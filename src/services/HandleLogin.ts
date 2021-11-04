@@ -1,15 +1,20 @@
 import { getManager } from 'typeorm';
+import { sign } from 'jsonwebtoken';
 
 import Instagram from '../api/instagram';
 import { create } from '../controllers/initializer';
 
+import authConfig from '../config/auth';
 import { Credentials } from '../config/types';
 import { logger } from '../utils/logger';
 import { getRandomPort } from '../utils/handlePorts';
 
 export default class HandleLogin {
   async run({ username, password }: Credentials): Promise<any> {
+    console.log('');
     logger.info('Start proccess login.');
+
+    const { secret, expiresIn } = authConfig;
 
     const manager = getManager();
     const credentials = { username, password };
@@ -18,26 +23,42 @@ export default class HandleLogin {
     const { browser, page } = await create({ username, proxy_port: port });
 
     const client = new Instagram({ browser, page, credentials });
-    const { status, data, message } = await client.startLogin();
+    await client.startLogin();
 
-    if (status !== 'success') {
-      await client.close();
-      throw new Error(message);
-    }
-
-    const { id, fbid, profile_pic_url_hd, full_name } = data;
+    const {
+      id,
+      fbid,
+      full_name,
+      is_private,
+      biography,
+      following,
+      followers,
+      publications,
+    } = await client.getUserData();
 
     await manager.query(`INSERT INTO accounts
-    (account_user, account_pass, instaid, fbid, avatar)
-    VALUES ('${username}', '${password}', '${id}', '${fbid}', '${profile_pic_url_hd}')
+    (account_user, account_pass, instaid, fbid)
+    VALUES ('${username}', '${password}', '${id}', '${fbid}')
     ON DUPLICATE KEY UPDATE account_pass='${password}';`);
 
     await client.close();
+    const token = sign({}, secret, {
+      subject: id,
+      expiresIn,
+    });
 
-    return {
+    const user = {
       user_id: id,
+      username,
+      biography,
+      is_private,
+      following,
+      followers,
+      publications,
       user_name: full_name || username,
-      user_avatar: profile_pic_url_hd,
     };
+
+    console.log('');
+    return { user, token };
   }
 }

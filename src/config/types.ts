@@ -8,9 +8,6 @@ export interface Credentials {
 export interface ResponseLogin {
   status: string;
   message: string;
-  type?: string;
-  checkpoint_url?: string;
-  data?: any;
 }
 
 export interface InstagramProps {

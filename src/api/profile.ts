@@ -48,13 +48,38 @@ export default class Profile {
   }
 
   async getUserData() {
-    const _sharedData = await this.page.evaluate(
-      // @ts-expect-error Error de type
-      () => window._sharedData.config.viewer,
+    await this.page.goto(
+      `https://www.instagram.com/${this.credentials.username}`,
+      { waitUntil: 'domcontentloaded' },
     );
 
-    // { id, fbid, full_name, profile_pic_url_hd, is_private, username }
-    return _sharedData;
+    await Sleep(500);
+    const _sharedData = await this.page.evaluate(
+      // @ts-expect-error Error de type
+      () => window._sharedData.entry_data.ProfilePage[0].graphql.user,
+    );
+
+    const {
+      id,
+      fbid,
+      full_name,
+      is_private,
+      biography,
+      edge_follow: { count: following },
+      edge_followed_by: { count: followers },
+      edge_owner_to_timeline_media: { count: publications },
+    } = _sharedData;
+
+    return {
+      id,
+      fbid,
+      full_name,
+      is_private,
+      biography,
+      following,
+      followers,
+      publications,
+    };
   }
 
   async verifyUserInterface() {

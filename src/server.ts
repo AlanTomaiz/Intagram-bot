@@ -1,15 +1,27 @@
+/* eslint no-param-reassign: "off" */
 import 'reflect-metadata';
 import 'dotenv/config';
 
 import express from 'express';
+import { Server } from 'socket.io';
+import { createServer } from 'http';
 import 'express-async-errors';
 import './database';
 
+import { logger } from './utils/logger';
 import HandleError from './middleware/response.error';
 import InstaRoutes from './routes/insta';
 
 const app = express();
 const PORT = 3333;
+
+const server = createServer(app);
+const wss = new Server(server, {
+  cors: {
+    origin: '*',
+    credentials: false,
+  },
+});
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -21,4 +33,10 @@ app.get('/', (request, response) => {
 app.use(InstaRoutes);
 app.use(HandleError);
 
-app.listen(PORT, () => console.log(`# Server start on port: ${PORT}`));
+wss.on('connection', (socket: any) => {
+  logger.info(`Someone connected on ws: ${socket.id}`);
+});
+
+server.listen(PORT, () => console.log(`# Server start on port: ${PORT}`));
+
+export { wss };
