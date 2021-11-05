@@ -1,9 +1,17 @@
 import { Router } from 'express';
 
 import HandleLogin from '../services/HandleLogin';
+import HandleRelogin from '../services/HandleRelogin';
 import HandleCheckpoint from '../services/HandleCheckpoint';
 
 const SessionRoutes = Router();
+
+SessionRoutes.get('/relogin/', async (request, response) => {
+  const service = new HandleRelogin();
+  await service.run();
+
+  return response.json({ status: 'success' });
+});
 
 SessionRoutes.post('/login/', async (request, response) => {
   const { username, password } = request.body;

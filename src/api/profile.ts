@@ -120,6 +120,17 @@ export default class Profile {
     });
   }
 
+  async verifyProfile() {
+    await Sleep(500);
+    const status = await userInterface(this.page);
+
+    if (status === 'CONNECTED') {
+      return true;
+    }
+
+    return false;
+  }
+
   async waitForLogin() {
     await this.page.waitForSelector('input[name="username"]');
 

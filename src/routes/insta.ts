@@ -6,7 +6,7 @@ import ensureAuthenticated from '../middleware/authenticated';
 
 const InstaRoutes = Router();
 
-InstaRoutes.use('/', SessionRoutes);
+InstaRoutes.use(SessionRoutes);
 InstaRoutes.use('/actions', ensureAuthenticated, ActionsRoutes);
 
 export default InstaRoutes;

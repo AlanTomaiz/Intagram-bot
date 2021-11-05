@@ -10,7 +10,7 @@ import { logger } from '../utils/logger';
 import { getRandomPort } from '../utils/handlePorts';
 
 export default class HandleLogin {
-  async run({ username, password }: Credentials): Promise<any> {
+  async run({ username, password, relogin }: Credentials): Promise<any> {
     console.log('');
     logger.info('Start proccess login.');
 
@@ -22,7 +22,7 @@ export default class HandleLogin {
     const port = await getRandomPort();
     const { browser, page } = await create({ username, proxy_port: port });
 
-    const client = new Instagram({ browser, page, credentials });
+    const client = new Instagram({ browser, page, credentials, relogin });
     await client.startLogin();
 
     const {
@@ -58,7 +58,6 @@ export default class HandleLogin {
       user_name: full_name || username,
     };
 
-    console.log('');
     return { user, token };
   }
 }

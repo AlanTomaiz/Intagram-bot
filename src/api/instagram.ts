@@ -2,6 +2,7 @@ import { InstagramProps, ResponseLogin } from '../config/types';
 import { logger } from '../utils/logger';
 import AppError from '../errors/app-error';
 import Profile from './profile';
+import Sleep from '../utils/sleep';
 
 export default class Instagram extends Profile {
   browser;
@@ -35,5 +36,26 @@ export default class Instagram extends Profile {
   async close() {
     logger.info('Close browser.');
     this.browser.close();
+  }
+
+  async follow(username: string) {
+    await this.page.goto(`https://www.instagram.com/${username}`, {
+      waitUntil: 'domcontentloaded',
+    });
+
+    try {
+      await Sleep(500);
+      await this.page.click('header button', { delay: 50 });
+      await this.page.waitForSelector('header span[aria-label="Following"]');
+
+      await this.close();
+      return true;
+    } catch {
+      await this.close();
+
+      throw new AppError(
+        'Não foi possível realizar esta operação, tente novamente.',
+      );
+    }
   }
 }

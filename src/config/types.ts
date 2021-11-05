@@ -3,6 +3,7 @@ import { Page, Browser } from 'puppeteer';
 export interface Credentials {
   username: string;
   password: string;
+  relogin?: boolean;
 }
 
 export interface ResponseLogin {
