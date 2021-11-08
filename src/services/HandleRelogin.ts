@@ -36,7 +36,7 @@ export default class HandleRelogin {
       }
     }
 
-    ReloadSquid();
+    // ReloadSquid();
     logger.info('Relogin finalizado.');
   }
 }

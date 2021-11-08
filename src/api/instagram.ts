@@ -45,12 +45,22 @@ export default class Instagram extends Profile {
 
     try {
       await Sleep(500);
-      await this.page.click('header button', { delay: 50 });
-      await this.page.waitForSelector('header span[aria-label="Following"]');
 
+      const followButton = (await this.page.$x('//button[text()="Follow"]'))[0];
+      if (!followButton) {
+        throw new Error();
+      }
+
+      await followButton.click();
+      await Sleep(1000);
       await this.close();
+
       return true;
     } catch {
+      await this.page.screenshot({
+        path: `temp/page-erro-follow-${new Date().getTime()}.png`,
+      });
+
       await this.close();
 
       throw new AppError(

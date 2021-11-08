@@ -5,10 +5,10 @@ import HandleFollows from '../services/HandleFollows.service';
 const ActionsRoutes = Router();
 
 ActionsRoutes.get('/followers/', async (request, response) => {
-  const { wss } = request.user;
+  const { id, wss } = request.user;
 
   const serviceFollow = new HandleFollows();
-  await serviceFollow.execute(wss);
+  await serviceFollow.execute({ user_id: id, socket_id: wss });
 
   return response.json({ status: 'success' });
 });
