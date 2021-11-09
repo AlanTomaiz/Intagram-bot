@@ -28,7 +28,6 @@ export default class HandleFollows {
     const { total_ref, account_user: userToFollow } = findUser;
 
     let follows = 0;
-    let lastMessage = new Date().getTime() - 1000;
     const totalFollows = total_ref + 10;
 
     (async function loop() {
@@ -50,11 +49,7 @@ export default class HandleFollows {
           await client.follow(userToFollow);
 
           follows++;
-
-          if (lastMessage < new Date().getTime()) {
-            lastMessage = new Date().getTime() + 1000;
-            wss.to(socket_id).emit('new_follow', follows);
-          }
+          wss.to(socket_id).emit('new_follow', follows);
         } catch (err) {
           const error_message =
             err.data?.message || err.data || err.message || err;

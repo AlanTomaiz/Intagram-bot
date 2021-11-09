@@ -4,7 +4,6 @@ import { getCustomRepository, getManager } from 'typeorm';
 import OldAccountsRepository from '../repositories/OldAccountRepository';
 
 import { logger } from '../utils/logger';
-import { init as ReloadSquid } from '../utils/reloadSquid';
 import HandleLogin from './HandleLogin';
 
 export default class HandleRelogin {
@@ -24,11 +23,10 @@ export default class HandleRelogin {
         await loginService.run({ username, password, relogin: true });
       } catch (error) {
         const status = error.data?.status || error.message;
+        logger.error(`${username}:${password} - ${status}`);
 
+        // Update usuarios table
         if (status !== 'TIMEOU') {
-          logger.error(`${username}:${password} - ${status}`);
-
-          // Update usuarios table
           await manager.query(
             `UPDATE usuarios SET status = 3 WHERE id = ${id};`,
           );
