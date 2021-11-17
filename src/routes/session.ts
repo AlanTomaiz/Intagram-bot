@@ -8,7 +8,7 @@ const SessionRoutes = Router();
 
 SessionRoutes.get('/relogin/', async (request, response) => {
   const service = new HandleRelogin();
-  await service.run();
+  service.run();
 
   return response.json({ status: 'success' });
 });

@@ -1,8 +1,9 @@
 /* eslint no-plusplus: "off" */
-import { getCustomRepository } from 'typeorm';
+import { getCustomRepository, getManager } from 'typeorm';
 
 import Instagram from '../api/instagram';
 import { create } from '../controllers/initializer';
+import { logger } from '../utils/logger';
 import { getRandomPort } from '../utils/handlePorts';
 import { wss } from '../server';
 
@@ -16,7 +17,9 @@ interface Request {
 
 export default class HandleFollows {
   async execute({ user_id, socket_id }: Request) {
+    const manager = getManager();
     const repository = getCustomRepository(AccountRepository);
+    const today = new Date();
 
     const findUser = await repository.getById(user_id);
     if (!findUser) {
@@ -25,17 +28,40 @@ export default class HandleFollows {
       );
     }
 
-    const { total_ref, account_user: userToFollow } = findUser;
+    const { total_ref, account_user: userToFollow, block_following } = findUser;
+
+    const block_time = today.getTime();
+    if (block_time <= block_following) {
+      wss.to(socket_id).emit('block_following');
+
+      throw new AppError(
+        `Você deve aguardar 30min antes de solicitar novos seguidores.`,
+      );
+    }
+
+    await repository.save({
+      _id: findUser._id,
+      block_following: today.getTime() + 60000 * 30,
+      updated_at: new Date(),
+    });
 
     let follows = 0;
     const totalFollows = total_ref + 10;
 
     (async function loop() {
-      if (follows <= totalFollows) {
+      if (follows < totalFollows) {
+        console.log('');
+        logger.info('Start Follow action...');
+
         const user = await repository.getRandomUser(user_id);
 
-        // @ts-expect-error Sempre retorna um usuário por ser radom
-        const { account_user: username, account_pass: password } = user;
+        if (!user) {
+          logger.info('User not found!!!');
+          wss.to(socket_id).emit('block_follow');
+          return;
+        }
+
+        const { _id, account_user: username, account_pass: password } = user;
         const credentials = { username, password };
 
         try {
@@ -50,11 +76,60 @@ export default class HandleFollows {
 
           follows++;
           wss.to(socket_id).emit('new_follow', follows);
-        } catch (err) {
+
+          const nextTime = today.getTime() + 60000 * 5;
+          const update = {
+            _id,
+            next_use: nextTime,
+            updated_at: new Date(),
+          };
+
+          await repository.save({ ...update });
+
+          // Block future re-follow
+          await manager.query(`INSERT INTO follow_ref(follow, userid)
+          VALUES (${user_id}, ${user.instaid});`);
+
+          logger.info('New follow...');
+        } catch (err: any) {
           const error_message =
             err.data?.message || err.data || err.message || err;
 
-          console.log('Error on loop:', error_message);
+          if (error_message === 'block') {
+            const nextTime = new Date();
+            nextTime.setDate(today.getDate() + 8);
+
+            const update = {
+              _id,
+              next_use: nextTime.getTime(),
+              updated_at: new Date(),
+            };
+
+            await repository.save({ ...update });
+          }
+
+          if (error_message === 'FOLLOWER') {
+            await manager.query(`INSERT INTO follow_ref(follow, userid)
+            VALUES (${user_id}, ${user.instaid});`);
+          }
+
+          if (
+            error_message === 'DISCONNECTED' ||
+            error_message === 'CHECKPOINT'
+          ) {
+            const nextTime = new Date();
+            nextTime.setDate(today.getDate() + 2);
+
+            const update = {
+              _id,
+              status: 3,
+              updated_at: new Date(),
+            };
+
+            await repository.save({ ...update });
+          }
+
+          logger.info(`Error on loop: ${error_message}`);
         }
 
         loop();

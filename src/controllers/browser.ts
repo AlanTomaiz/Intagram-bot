@@ -34,7 +34,6 @@ export async function initInstagram(browser: Browser, username: string) {
     try {
       await page.goto('https://www.instagram.com/', {
         waitUntil: 'domcontentloaded',
-        timeout: 10000,
       });
 
       await page.setCookie({ name: 'ig_lang', value: 'en', path: '/' });
@@ -48,8 +47,13 @@ export async function initInstagram(browser: Browser, username: string) {
         waitUntil: 'domcontentloaded',
       });
 
+      // Page logger
+      // page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+
       return true;
-    } catch {
+    } catch (err) {
+      // console.log('error access page: ', err.message);
+
       return false;
     }
   };
@@ -60,7 +64,7 @@ export async function initInstagram(browser: Browser, username: string) {
     attempts += 1;
 
     if (!data) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
   }
 

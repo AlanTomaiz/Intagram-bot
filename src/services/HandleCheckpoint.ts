@@ -44,71 +44,70 @@ export default class HandleCheckpoint {
     });
 
     // @ts-expect-error Error no type
-    if (response?.success) {
-      await page.screenshot({
-        path: `temp/page-erro-checkpoint-type-1-${new Date().getTime()}.png`,
+    if (!response.success) {
+      const { success } = await client.ConfirmCheckpoint(code).catch(error => {
+        const error_message = error.data.message || error.message;
+
+        logger.error(`Catch checkpoint: ${error_message}`);
+        return { success: false };
       });
 
-      await client.close();
-      throw new AppError({
-        status: `ERROR`,
-        message: `Login with success!`,
-      });
+      if (!success) {
+        await page.screenshot({
+          path: `temp/page-erro-checkpoint-${new Date().getTime()}.png`,
+        });
+
+        await client.close();
+        throw new AppError({
+          status: `ERROR_CHECKPOINT`,
+          message: `Please check the code and try again.`,
+        });
+      }
     }
 
-    const { success } = await client.ConfirmCheckpoint(code).catch(error => {
-      const error_message = error.data.message || error.message;
+    try {
+      const {
+        id,
+        fbid,
+        full_name,
+        is_private,
+        biography,
+        following,
+        followers,
+        publications,
+      } = await client.getUserData();
 
-      logger.error(`Catch checkpoint: ${error_message}`);
-      return { success: false };
-    });
-
-    if (!success) {
-      await page.screenshot({
-        path: `temp/page-erro-checkpoint-type-2-${new Date().getTime()}.png`,
-      });
-
-      await client.close();
-      throw new AppError({
-        status: `ERROR_CHECKPOINT`,
-        message: `Please check the code and try again.`,
-      });
-    }
-
-    const {
-      id,
-      fbid,
-      full_name,
-      is_private,
-      biography,
-      following,
-      followers,
-      publications,
-    } = await client.getUserData();
-
-    await manager.query(`INSERT INTO accounts
+      await manager.query(`INSERT INTO accounts
     (account_user, account_pass, instaid, fbid)
     VALUES ('${username}', '${password}', '${id}', '${fbid}')
     ON DUPLICATE KEY UPDATE account_pass='${password}';`);
 
-    await client.close();
-    const token = sign({}, secret, {
-      subject: id,
-      expiresIn,
-    });
+      await client.close();
+      const token = sign({}, secret, {
+        subject: id,
+        expiresIn,
+      });
 
-    const user = {
-      user_id: id,
-      username,
-      biography,
-      is_private,
-      following,
-      followers,
-      publications,
-      user_name: full_name || username,
-    };
+      const user = {
+        user_id: id,
+        username,
+        biography,
+        is_private,
+        following,
+        followers,
+        publications,
+        user_name: full_name || username,
+      };
 
-    console.log('');
-    return { user, token };
+      console.log('');
+      return { user, token };
+    } catch {
+      await client.close();
+
+      throw new AppError({
+        status: `FAILED`,
+        message: `Please try again.`,
+      });
+    }
   }
 }

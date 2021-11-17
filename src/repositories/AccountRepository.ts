@@ -9,16 +9,26 @@ export default class AccountRepository extends Repository<Account> {
   }
 
   async getRandomUser(NOT_USER?: string) {
-    const query = this.createQueryBuilder();
+    const query = this.createQueryBuilder('ACCOUNT');
     const time = new Date().getTime();
 
-    query.where('status = 1');
-    query.andWhere(`next_use > ${time}`);
-    query.orderBy('rand()');
+    query.where('ACCOUNT.status = 1');
+    query.andWhere(`(ACCOUNT.next_use < ${time} || ACCOUNT.next_use IS NULL)`);
 
     if (NOT_USER) {
-      query.andWhere('account_user != :NOT_USER', { NOT_USER });
+      query.andWhere(`ACCOUNT.instaid != ${NOT_USER}`);
     }
+
+    query.leftJoin(
+      'follow_ref',
+      'REF',
+      `REF.userid = ACCOUNT.instaid AND REF.follow = ${NOT_USER}`,
+    );
+
+    query.andWhere('REF.userid IS NULL');
+    query.limit(1);
+
+    // query.orderBy('rand()');
 
     const result = await query.getOne();
     return result;

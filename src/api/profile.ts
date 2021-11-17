@@ -44,6 +44,7 @@ export default class Profile {
     if (status === 'DISCONNECTED') {
       return this.waitForLogin();
     }
+
     throw new Error('TIMEOU');
   }
 
@@ -122,6 +123,7 @@ export default class Profile {
 
   async verifyProfile() {
     await Sleep(500);
+
     const status = await userInterface(this.page);
 
     if (status === 'CONNECTED') {
@@ -213,11 +215,14 @@ export default class Profile {
     }
 
     // Start checkpoint actions
-    await this.page.waitForNavigation({
-      waitUntil: 'domcontentloaded',
-    });
+    try {
+      await this.page.waitForNavigation({
+        waitUntil: 'domcontentloaded',
+      });
+    } catch {}
 
-    //
+    await Sleep(500);
+
     const recaptcha = await this.page.$('#recaptcha-input');
     if (recaptcha) {
       throw new AppError({
@@ -266,7 +271,7 @@ export default class Profile {
   }
 
   async ConfirmCheckpoint(code: string) {
-    await Sleep(500);
+    await Sleep(1000);
 
     const submitButton = (await this.page.$x('//button[text()="Submit"]'))[0];
     await this.page.type('input[id="security_code"]', code);

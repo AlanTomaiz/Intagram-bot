@@ -1,10 +1,10 @@
 export const puppeteerConfig = [
-  // '--log-level=3', // fatal only
+  '--log-level=3', // fatal only
   '--no-default-browser-check',
   // '--disable-site-isolation-trials',
   '--no-experiments',
-  // '--ignore-gpu-blacklist',
-  // '--ignore-certificate-errors',
+  '--ignore-gpu-blacklist',
+  '--ignore-certificate-errors',
   '--disable-gpu',
   '--disable-extensions',
   '--disable-default-apps',
