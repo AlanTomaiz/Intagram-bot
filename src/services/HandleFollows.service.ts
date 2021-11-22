@@ -101,6 +101,7 @@ export default class HandleFollows {
 
             const update = {
               _id,
+              status: 5,
               next_use: nextTime.getTime(),
               updated_at: new Date(),
             };
