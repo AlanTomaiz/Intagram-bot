@@ -64,6 +64,15 @@ export default class HandleFollows {
         const { _id, account_user: username, account_pass: password } = user;
         const credentials = { username, password };
 
+        const nextUseTime = today.getTime() + 60000 * 5;
+        const updateUser = {
+          _id,
+          next_use: nextUseTime,
+          updated_at: new Date(),
+        };
+
+        await repository.save({ ...updateUser });
+
         try {
           const port = await getRandomPort();
           const { browser, page } = await create({
@@ -76,15 +85,6 @@ export default class HandleFollows {
 
           follows++;
           wss.to(socket_id).emit('new_follow', follows);
-
-          const nextTime = today.getTime() + 60000 * 5;
-          const update = {
-            _id,
-            next_use: nextTime,
-            updated_at: new Date(),
-          };
-
-          await repository.save({ ...update });
 
           // Block future re-follow
           await manager.query(`INSERT INTO follow_ref(follow, userid)
@@ -117,9 +117,6 @@ export default class HandleFollows {
             error_message === 'DISCONNECTED' ||
             error_message === 'CHECKPOINT'
           ) {
-            const nextTime = new Date();
-            nextTime.setDate(today.getDate() + 2);
-
             const update = {
               _id,
               status: 3,

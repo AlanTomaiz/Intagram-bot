@@ -13,7 +13,7 @@ const HandleError = (
     const message =
       err.message || 'Erro ao executar esta operação, tente novamente.';
 
-    return res.status(err.statusCode).json({ status: 'error', message });
+    return res.status(err.statusCode).json(message);
   }
 
   if (err instanceof AppError) {
