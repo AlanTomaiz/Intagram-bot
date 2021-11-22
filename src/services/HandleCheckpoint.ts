@@ -16,9 +16,6 @@ interface Checkpoint extends Credentials {
 
 export default class HandleCheckpoint {
   async run({ username, password, code }: Checkpoint): Promise<any> {
-    console.log('');
-    logger.info('Start proccess checkpoint...');
-
     const { secret, expiresIn } = authConfig;
 
     const manager = getManager();
@@ -99,7 +96,6 @@ export default class HandleCheckpoint {
         user_name: full_name || username,
       };
 
-      console.log('');
       return { user, token };
     } catch {
       await client.close();

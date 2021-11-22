@@ -41,7 +41,7 @@ export default class HandleFollows {
 
     await repository.save({
       _id: findUser._id,
-      block_following: today.getTime() + 60000 * 30,
+      block_following: block_time + 60000 * 30,
       updated_at: new Date(),
     });
 
