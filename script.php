@@ -28,9 +28,11 @@ function generatePorts() {
 }
 
 function reloadSquid() {
-  exec("sudo squid -k restart");
-  exec("sudo squid");
+  exec("squid reload");
   sleep(1);
+
+  // exec("squid");
+  // sleep(1);
 }
 
 // nodejs
