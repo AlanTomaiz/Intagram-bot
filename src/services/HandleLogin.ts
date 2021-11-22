@@ -7,10 +7,12 @@ import { create } from '../controllers/initializer';
 import authConfig from '../config/auth';
 import { Credentials } from '../config/types';
 import { getRandomPort } from '../utils/handlePorts';
+import { logger } from '../utils/logger';
 import SendCookies from './HandleRequestCookies.service';
 
 export default class HandleLogin {
   async run({ username, password, relogin }: Credentials): Promise<any> {
+    logger.info('Process login start...');
     const { secret, expiresIn } = authConfig;
 
     const manager = getManager();
