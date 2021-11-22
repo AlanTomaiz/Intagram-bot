@@ -28,11 +28,11 @@ function generatePorts() {
 }
 
 function reloadSquid() {
-  exec("squid reload");
+  shell_exec("squid reload");
   sleep(1);
 
-  // exec("squid");
-  // sleep(1);
+  shell_exec("squid");
+  sleep(1);
 }
 
 // nodejs
