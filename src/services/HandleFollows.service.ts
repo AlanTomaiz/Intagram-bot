@@ -90,7 +90,7 @@ export default class HandleFollows {
           await manager.query(`INSERT INTO follow_ref(follow, userid)
           VALUES (${user_id}, ${user.instaid});`);
 
-          logger.info('New follow...');
+          logger.info('New follow.');
         } catch (err: any) {
           const error_message =
             err.data?.message || err.data || err.message || err;

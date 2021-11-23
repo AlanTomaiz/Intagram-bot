@@ -1,6 +1,6 @@
 <?php
 
-DEFINE("GENERATE_QUANT_IPS", 500);
+DEFINE("GENERATE_QUANT_IPS", 1300);
 
 function randomIpv6() {
     return '2001:470:8a2f:' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536)) . ':' . dechex(rand(1, 65536));
