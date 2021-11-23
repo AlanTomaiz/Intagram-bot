@@ -50,11 +50,8 @@ export default class HandleCheckpoint {
       });
 
       if (!success) {
-        await page.screenshot({
-          path: `temp/page-erro-checkpoint-${new Date().getTime()}.png`,
-        });
-
         await client.close();
+
         throw new AppError({
           status: `ERROR_CHECKPOINT`,
           message: `Please check the code and try again.`,

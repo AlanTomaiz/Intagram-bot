@@ -64,7 +64,7 @@ export default class HandleFollows {
         const { _id, account_user: username, account_pass: password } = user;
         const credentials = { username, password };
 
-        const nextUseTime = today.getTime() + 60000 * 5;
+        const nextUseTime = today.getTime() + 60000 * 10;
         const updateUser = {
           _id,
           next_use: nextUseTime,

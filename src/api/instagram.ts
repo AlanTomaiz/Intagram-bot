@@ -75,21 +75,20 @@ export default class Instagram extends Profile {
       await this.close();
       return true;
     } catch ({ message }) {
-      await this.page.screenshot({
-        path: `temp/page-erro-follow-${new Date().getTime()}.png`,
-      });
-
       if (message === 'follower') {
         await this.close();
         throw new AppError('FOLLOWER');
       }
+
+      await this.page.screenshot({
+        path: `temp/page-erro-follow-${new Date().getTime()}.png`,
+      });
 
       if (message === 'block') {
         await this.close();
         throw new AppError('block');
       }
 
-      await Sleep(1000);
       const status = await userInterface(this.page);
 
       await this.close();

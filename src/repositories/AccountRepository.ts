@@ -28,7 +28,7 @@ export default class AccountRepository extends Repository<Account> {
     query.andWhere('REF.userid IS NULL');
     query.limit(1);
 
-    // query.orderBy('rand()');
+    query.orderBy('rand()');
 
     const result = await query.getOne();
     return result;

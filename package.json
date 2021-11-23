@@ -1,6 +1,6 @@
 {
   "name": "insta",
-  "version": "2.2.100",
+  "version": "2.2.113",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
