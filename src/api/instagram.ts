@@ -57,11 +57,16 @@ export default class Instagram extends Profile {
       }
 
       const followButton = (await this.page.$x('//button[text()="Follow"]'))[0];
-      if (!followButton) {
+
+      const followButton2 = (
+        await this.page.$x('//button[text()="Follow Back"]')
+      )[0];
+
+      if (!followButton && !followButton2) {
         throw new Error();
       }
 
-      await followButton.click();
+      await (followButton || followButton2).click();
       await Sleep(1000);
 
       const blockButton = (
@@ -72,6 +77,14 @@ export default class Instagram extends Profile {
         throw new Error('block');
       }
 
+      const checkpointButton = (
+        await this.page.$x('//button[text()="Send Security Code"]')
+      )[0];
+
+      if (checkpointButton) {
+        throw new Error('checkpoint');
+      }
+
       await this.close();
       return true;
     } catch ({ message }) {
@@ -80,14 +93,19 @@ export default class Instagram extends Profile {
         throw new AppError('FOLLOWER');
       }
 
-      await this.page.screenshot({
-        path: `temp/page-erro-follow-${new Date().getTime()}.png`,
-      });
-
       if (message === 'block') {
         await this.close();
         throw new AppError('block');
       }
+
+      if (message === 'checkpoint') {
+        await this.close();
+        throw new AppError('CHECKPOINT');
+      }
+
+      await this.page.screenshot({
+        path: `temp/page-erro-follow-${new Date().getTime()}.png`,
+      });
 
       const status = await userInterface(this.page);
 
