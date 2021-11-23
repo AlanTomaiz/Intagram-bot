@@ -1,4 +1,4 @@
-/* eslint no-restricted-globals: "off" */
+/* eslint no-restricted-globals: "off", no-empty: "off" */
 import { InstagramProps, ResponseLogin } from '../config/types';
 import { userInterface } from '../controllers/auth';
 import { logger } from '../utils/logger';
@@ -46,10 +46,20 @@ export default class Instagram extends Profile {
         waitUntil: 'domcontentloaded',
       });
 
-      await this.page.waitForSelector('input[placeholder="Search"]', {
-        visible: true,
-        timeout: 10000,
-      });
+      try {
+        await this.page.waitForSelector('input[placeholder="Search"]', {
+          visible: true,
+          timeout: 10000,
+        });
+      } catch {}
+
+      const checkpointButton = (
+        await this.page.$x('//button[text()="Send Security Code"]')
+      )[0];
+
+      if (checkpointButton) {
+        throw new Error('checkpoint');
+      }
 
       const messageButton = (await this.page.$x('//div[text()="Message"]'))[0];
       if (messageButton) {
@@ -75,14 +85,6 @@ export default class Instagram extends Profile {
 
       if (blockButton) {
         throw new Error('block');
-      }
-
-      const checkpointButton = (
-        await this.page.$x('//button[text()="Send Security Code"]')
-      )[0];
-
-      if (checkpointButton) {
-        throw new Error('checkpoint');
       }
 
       await this.close();
