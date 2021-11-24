@@ -352,7 +352,7 @@ export default class Instagram extends Utils {
       });
     }
 
-    console.log('status challenger', status);
+    await this.verifyUserInterface();
   }
 
   async tryLogin(checkpoint = false) {
@@ -361,7 +361,7 @@ export default class Instagram extends Utils {
     try {
       await this.page.waitForSelector('input[name="username"]');
     } catch (err) {
-      console.log('?', err);
+      console.log('err tryLogin?', err);
       await this.close();
 
       throw new AppError({
