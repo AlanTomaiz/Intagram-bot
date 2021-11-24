@@ -40,7 +40,7 @@ wss.on('connection', (socket: any) => {
 
 async function init() {
   logger.info('Starting server...');
-  await generatePorts();
+  // await generatePorts();
 
   setTimeout(async () => {
     logger.info('Squid reloading...');
