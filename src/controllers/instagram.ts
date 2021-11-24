@@ -167,8 +167,10 @@ export default class Instagram extends Utils {
         { timeout: 10000 },
       )
       .then(response => response.json())
-      .catch(err => {
+      .catch(async err => {
         console.log('err waitForLogin', err);
+
+        await this.close();
         throw new Error('TIMEOU');
       });
 
