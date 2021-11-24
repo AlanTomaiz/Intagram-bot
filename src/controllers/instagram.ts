@@ -128,7 +128,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `failed`,
+        status: `FAILED`,
         message: `Login has not succeeded.`,
       });
     }
@@ -188,7 +188,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `timeout`,
+        status: `TIMEOUT`,
         message: `Wait a few minutes and try again.`,
       });
     }
@@ -212,7 +212,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `two_factor`,
+        status: `TWO_FACTOR`,
         message: `Two-factor authentication.`,
       });
     }
@@ -221,7 +221,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `user_not_existent`,
+        status: `USER_NOT_EXISTENT`,
         message: `The username doesn't belong to an account.`,
       });
     }
@@ -230,7 +230,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `pass_incorrect`,
+        status: `PASS_INCORRECT`,
         message: `Password was incorrect.`,
       });
     }
@@ -241,7 +241,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `checkpoint`,
+        status: `CHECKPOINT`,
         message: `Checkpoint required.`,
       });
     }
@@ -253,7 +253,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `disabled`,
+        status: `DISABLED`,
         message: `Your Account Has Been Disabled.`,
       });
     }
@@ -268,7 +268,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `checkpoint`,
+        status: `CHECKPOINT`,
         message: `Checkpoint required.`,
       });
     }
@@ -286,7 +286,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `failed`,
+        status: `FAILED`,
         message: `Login has not succeeded.`,
       });
     }
@@ -295,7 +295,7 @@ export default class Instagram extends Utils {
     await this.close();
 
     throw new AppError({
-      status: `checkpoint`,
+      status: `CHECKPOINT`,
       message: `Checkpoint required.`,
     });
   }
@@ -305,7 +305,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `code_required`,
+        status: `CODE_REQUIRED`,
         message: `You must enter the verification code.`,
       });
     }
@@ -316,7 +316,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `failed`,
+        status: `FAILED`,
         message: `Confirmation checkpoint has not succeeded.`,
       });
     }
@@ -327,7 +327,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `failed`,
+        status: `FAILED`,
         message: `Login has not succeeded.`,
       });
     }
@@ -346,7 +346,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `checkpoint_failed`,
+        status: `CHECKPOINT_FAILED`,
         message: `Please check the code and try again.`,
       });
     }
@@ -364,7 +364,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `failed`,
+        status: `FAILED`,
         message: `Login has not succeeded.`,
       });
     }
