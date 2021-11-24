@@ -167,7 +167,8 @@ export default class Instagram extends Utils {
         { timeout: 10000 },
       )
       .then(response => response.json())
-      .catch(() => {
+      .catch(err => {
+        console.log('err waitForLogin', err);
         throw new Error('TIMEOU');
       });
 
@@ -182,10 +183,6 @@ export default class Instagram extends Utils {
     } = request;
 
     if (spam || request === 'TIMEOUT') {
-      await this.page.screenshot({
-        path: `temp/page-erro-${new Date().getTime()}.png`,
-      });
-
       await this.close();
 
       throw new AppError({
