@@ -1,14 +1,12 @@
 import { getManager } from 'typeorm';
 import { sign } from 'jsonwebtoken';
 
-import Instagram from '../api/instagram';
-import { create } from '../controllers/initializer';
-
 import authConfig from '../config/auth';
+import Instagram from '../controllers/instagram';
+import { logger } from '../utils/logger';
+import { create } from '../controllers/initializer';
 import { Credentials } from '../config/types';
 import { getRandomPort } from '../utils/handlePorts';
-import { logger } from '../utils/logger';
-import SendCookies from './HandleRequestCookies.service';
 
 export default class HandleLogin {
   async run({ username, password, relogin }: Credentials): Promise<any> {
@@ -19,10 +17,10 @@ export default class HandleLogin {
     const credentials = { username, password };
 
     const port = await getRandomPort();
-    const { browser, page } = await create({ username, proxy_port: port });
+    const browser = await create({ username, proxy_port: port });
 
-    const client = new Instagram({ browser, page, credentials, relogin });
-    await client.startLogin();
+    const client = new Instagram({ browser, credentials, relogin });
+    await client.login();
 
     const {
       id,
@@ -33,15 +31,12 @@ export default class HandleLogin {
       following,
       followers,
       publications,
-    } = await client.getUserData();
+    } = await client.getUserData(username);
 
     await manager.query(`INSERT INTO accounts
     (account_user, account_pass, instaid, fbid)
     VALUES ('${username}', '${password}', '${id}', '${fbid}')
     ON DUPLICATE KEY UPDATE account_pass='${password}';`);
-
-    // SendCookies to other server
-    await SendCookies({ page, user: username, pass: password });
 
     await client.close();
     const token = sign({}, secret, {

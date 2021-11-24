@@ -1,11 +1,11 @@
 /* eslint no-empty: "off", no-await-in-loop: "off" */
 import puppeteer, { Browser } from 'puppeteer';
 
-import { injectCookies } from './auth';
+import { tryLoadCookies } from './auth';
 
 export async function initBrowser(configs: string[]) {
   return puppeteer.launch({
-    // headless: false,
+    headless: false,
     args: [...configs],
   });
 }
@@ -27,7 +27,7 @@ export async function initInstagram(browser: Browser, username: string) {
 
   if (!page) {
     browser.close();
-    return false;
+    throw new Error(`Error accessing page.`);
   }
 
   const collectData = async () => {
@@ -37,7 +37,7 @@ export async function initInstagram(browser: Browser, username: string) {
       });
 
       await page.setCookie({ name: 'ig_lang', value: 'en', path: '/' });
-      await injectCookies(page, username);
+      await tryLoadCookies(page, username);
 
       await page.evaluate(() => {
         window.location.reload();
@@ -69,13 +69,13 @@ export async function initInstagram(browser: Browser, username: string) {
   }
 
   if (data) {
-    return page;
+    return;
   }
 
-  await page.screenshot({
-    path: `temp/page-erro-${new Date().getTime()}.png`,
-  });
+  // await page.screenshot({
+  //   path: `temp/page-erro-${new Date().getTime()}.png`,
+  // });
 
   browser.close();
-  return false;
+  throw new Error(`Error accessing page.`);
 }

@@ -1,4 +1,4 @@
-import { Page, Browser } from 'puppeteer';
+import { Browser } from 'puppeteer';
 
 export interface Credentials {
   username: string;
@@ -13,7 +13,6 @@ export interface ResponseLogin {
 
 export interface InstagramProps {
   browser: Browser;
-  page: Page;
   credentials: Credentials;
   relogin?: boolean;
 }

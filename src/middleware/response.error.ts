@@ -9,6 +9,8 @@ const HandleError = (
   res: Response,
   _: NextFunction,
 ) => {
+  console.log('error server:', err);
+
   if (err instanceof RequestError) {
     const message =
       err.message || 'Erro ao executar esta operação, tente novamente.';
