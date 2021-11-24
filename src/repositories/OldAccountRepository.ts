@@ -14,7 +14,7 @@ export default class OldAccountsRepository extends Repository<OldAccounts> {
     query.andWhere('account.account_user IS NULL');
     query.orderBy('rand()');
     query.orderBy('id', 'DESC');
-    query.limit(1500);
+    query.limit(100);
 
     const result = await query.getMany();
     return result;

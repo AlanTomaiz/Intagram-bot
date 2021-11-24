@@ -21,15 +21,24 @@ export default class HandleRelogin {
 
       try {
         await loginService.run({ username, password, relogin: true });
-      } catch (error) {
+      } catch (error: any) {
         const status = error.data?.status || error.message;
-        logger.error(`${username}:${password} - ${status}`);
+        // logger.error(`${username}:${password} - ${status}`);
 
         // Update usuarios table
-        if (status !== 'TIMEOU') {
+        if (
+          status === 'checkpoint' ||
+          status === 'two_factor' ||
+          status === 'user_not_existent' ||
+          status === 'pass_incorrect'
+        ) {
           await manager.query(
             `UPDATE usuarios SET status = 3 WHERE id = ${id};`,
           );
+        }
+
+        if (status === 'checkpoint') {
+          logger.error(`${username}:${password} - ${status}`);
         }
       }
     }

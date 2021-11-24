@@ -4,9 +4,8 @@ import { ElementHandle, Browser, Page } from 'puppeteer';
 import Utils from './utils';
 import AppError from '../errors/app-error';
 import { logger } from '../utils/logger';
-import { Credentials, InstagramProps, ResponseLogin } from '../config/types';
+import { Credentials, InstagramProps } from '../config/types';
 import { tryDeleteCookies, trySaveCookies, trySendCookies } from './auth';
-// import { userInterface } from '../controllers/auth';
 
 export default class Instagram extends Utils {
   browser: Browser;
@@ -15,9 +14,12 @@ export default class Instagram extends Utils {
 
   credentials: Credentials;
 
+  relogin: boolean | undefined;
+
   constructor({ browser, credentials, relogin }: InstagramProps) {
     super();
 
+    this.relogin = relogin;
     this.browser = browser;
     this.credentials = credentials;
   }
@@ -26,6 +28,7 @@ export default class Instagram extends Utils {
     const [page] = await this.browser.pages();
 
     if (!page) {
+      await this.close();
       throw new Error(`Error accessing page.`);
     }
 
@@ -68,6 +71,7 @@ export default class Instagram extends Utils {
 
   async getUserData(username: string) {
     await this.navigateToUser(username);
+
     const _sharedData = await this.page.evaluate(
       // @ts-expect-error Error de type
       () => window._sharedData.entry_data.ProfilePage[0].graphql.user,
@@ -109,6 +113,51 @@ export default class Instagram extends Utils {
     }
   }
 
+  async verifyUserInterface() {
+    const { username, password } = this.credentials;
+
+    await this.sleep(1000);
+    if (!(await this.isLoggedIn())) {
+      // Still not logged in, trying to reload loading page
+      await this.page.reload();
+      await this.sleep(5000);
+    }
+
+    if (!(await this.isLoggedIn())) {
+      // WARNING: Login has not succeeded.
+      await this.close();
+
+      throw new AppError({
+        status: `failed`,
+        message: `Login has not succeeded.`,
+      });
+    }
+
+    await this.tryPressButton(
+      await this.page.$x('//button[text()="Save Info"]'),
+      'Login info dialog: Save Info',
+    );
+
+    await this.sleep(1000);
+    await this.tryPressButton(
+      await this.page.$x('//button[text()="Allow All Cookies"]'),
+      'Accept use cookies dialog',
+    );
+
+    await this.tryPressButton(
+      await this.page.$x('//button[text()="Not Now"]'),
+      'Turn on Notifications dialog',
+    );
+
+    await trySaveCookies(this.page, username);
+
+    await trySendCookies({
+      page: this.page,
+      user: username,
+      pass: password,
+    });
+  }
+
   async waitForLogin() {
     const request = await this.page
       .waitForResponse(
@@ -133,22 +182,27 @@ export default class Instagram extends Utils {
     } = request;
 
     if (spam || request === 'TIMEOUT') {
-      await this.sleep(2000);
+      await this.page.screenshot({
+        path: `temp/page-erro-${new Date().getTime()}.png`,
+      });
+
       await this.close();
 
       throw new AppError({
-        status: `TIMEOUT`,
+        status: `timeout`,
         message: `Wait a few minutes and try again.`,
       });
     }
 
-    // if (reactivated) {
-    //   return this.verifyUserInterface();
-    // }
+    if (reactivated) {
+      await this.verifyUserInterface();
+      return;
+    }
 
-    // if (oneTapPrompt) {
-    //   return this.verifyUserInterface();
-    // }
+    if (oneTapPrompt) {
+      await this.verifyUserInterface();
+      return;
+    }
 
     if (checkpoint_url) {
       await this.handleCheckpoint();
@@ -159,7 +213,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `TWO_FACTOR`,
+        status: `two_factor`,
         message: `Two-factor authentication.`,
       });
     }
@@ -168,7 +222,7 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `USER_NOT_EXISTENT`,
+        status: `user_not_existent`,
         message: `The username doesn't belong to an account.`,
       });
     }
@@ -177,13 +231,22 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `PASS_INCORRECT`,
+        status: `pass_incorrect`,
         message: `Password was incorrect.`,
       });
     }
   }
 
   async handleCheckpoint() {
+    if (this.relogin) {
+      await this.close();
+
+      throw new AppError({
+        status: `checkpoint`,
+        message: `Checkpoint required.`,
+      });
+    }
+
     await this.sleep(6000);
 
     const recaptcha = await this.page.$('#recaptcha-input');
@@ -220,14 +283,6 @@ export default class Instagram extends Utils {
           response.request().method() === 'POST',
         { timeout: 10000 },
       );
-
-      await trySaveCookies(this.page, this.credentials.username);
-      await this.close();
-
-      throw new AppError({
-        status: `checkpoint`,
-        message: `Checkpoint required.`,
-      });
     } catch (err) {
       await this.close();
 
@@ -236,32 +291,40 @@ export default class Instagram extends Utils {
         message: `Login has not succeeded.`,
       });
     }
+
+    await trySaveCookies(this.page, this.credentials.username);
+    await this.close();
+
+    throw new AppError({
+      status: `checkpoint`,
+      message: `Checkpoint required.`,
+    });
   }
 
-  async login() {
-    const { username, password } = this.credentials;
+  async confirmCheckpoint(code: string) {
+    if (!code) {
+      await this.close();
 
-    if (!(await this.isLoggedIn())) {
-      tryDeleteCookies(username);
-
-      await this.page.waitForSelector('input[name="username"]');
-      await this.page.type('input[name="username"]', username, { delay: 50 });
-      await this.page.type('input[name="password"]', password, { delay: 50 });
-      await this.sleep(1000);
-
-      await this.page.click('#loginForm [type="submit"]');
-      await this.waitForLogin();
+      throw new AppError({
+        status: `code_required`,
+        message: `You must enter the verification code.`,
+      });
     }
 
-    await this.sleep(1000);
-    if (!(await this.isLoggedIn())) {
-      // Still not logged in, trying to reload loading page
-      await this.page.reload();
-      await this.sleep(5000);
+    try {
+      await this.page.waitForSelector('input[id="security_code"]');
+    } catch (err) {
+      await this.close();
+
+      throw new AppError({
+        status: `failed`,
+        message: `Confirmation checkpoint has not succeeded.`,
+      });
     }
 
-    if (!(await this.isLoggedIn())) {
-      // WARNING: Login has not succeeded.
+    await this.page.type('input[id="security_code"]', code);
+    const submitButton = (await this.page.$x('//button[text()="Submit"]'))[0];
+    if (!submitButton) {
       await this.close();
 
       throw new AppError({
@@ -270,28 +333,62 @@ export default class Instagram extends Utils {
       });
     }
 
-    await this.tryPressButton(
-      await this.page.$x('//button[text()="Save Info"]'),
-      'Login info dialog: Save Info',
-    );
+    await submitButton.click();
+    const { status } = await this.page
+      .waitForResponse(
+        response =>
+          response.url().includes('challenge/') &&
+          response.request().method() === 'POST',
+        { timeout: 10000 },
+      )
+      .then(response => response.json());
 
-    await this.tryPressButton(
-      await this.page.$x('//button[text()="Allow All Cookies"]'),
-      'Accept use cookies dialog',
-    );
+    if (status === 'fail') {
+      await this.close();
 
-    await this.tryPressButton(
-      await this.page.$x('//button[text()="Not Now"]'),
-      'Turn on Notifications dialog',
-    );
+      throw new AppError({
+        status: `checkpoint_failed`,
+        message: `Please check the code and try again.`,
+      });
+    }
 
-    await trySaveCookies(this.page, username);
+    console.log('status challenger', status);
+  }
 
-    await trySendCookies({
-      page: this.page,
-      user: username,
-      pass: password,
-    });
+  async tryLogin(checkpoint = false) {
+    const { username, password } = this.credentials;
+
+    try {
+      await this.page.waitForSelector('input[name="username"]');
+    } catch (err) {
+      console.log('?', err);
+      await this.close();
+
+      throw new AppError({
+        status: `failed`,
+        message: `Login has not succeeded.`,
+      });
+    }
+
+    await this.page.type('input[name="username"]', username, { delay: 50 });
+    await this.page.type('input[name="password"]', password, { delay: 50 });
+    await this.sleep(500);
+    await this.page.click('#loginForm [type="submit"]', { delay: 50 });
+
+    if (checkpoint) {
+      return;
+    }
+
+    await this.waitForLogin();
+  }
+
+  async login() {
+    if (!(await this.isLoggedIn())) {
+      tryDeleteCookies(this.credentials.username);
+      await this.tryLogin();
+    }
+
+    await this.verifyUserInterface();
   }
 
   async close() {

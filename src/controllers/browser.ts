@@ -5,7 +5,7 @@ import { tryLoadCookies } from './auth';
 
 export async function initBrowser(configs: string[]) {
   return puppeteer.launch({
-    headless: false,
+    // headless: false,
     args: [...configs],
   });
 }
