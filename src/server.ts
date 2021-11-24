@@ -38,7 +38,8 @@ wss.on('connection', (socket: any) => {
   logger.info(`Someone connected on ws: ${socket.id}`);
 });
 
-(async () => {
+async function init() {
+  logger.info('Starting server...');
   await generatePorts();
 
   setTimeout(async () => {
@@ -46,7 +47,8 @@ wss.on('connection', (socket: any) => {
     await generatePorts();
   }, 60000 * 60 * 3);
 
-  server.listen(PORT, () => console.log(`# Server start on port: ${PORT}`));
-})();
+  server.listen(PORT, () => logger.info(`# Server start on port: ${PORT}`));
+}
 
+init();
 export { wss };
