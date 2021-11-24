@@ -55,7 +55,6 @@ tcp_outgoing_address ${ip_list[count]} tasty${port}`;
   fs.writeFileSync(`${tempPath}/ip_list.conf`, ip_list.join('\n'));
 
   await execPHP('php script.php reloadSquid');
-  await Sleep(500);
 }
 
 export async function getRandomPort() {
