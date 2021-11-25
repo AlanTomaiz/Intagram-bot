@@ -268,8 +268,8 @@ export default class Instagram extends Utils {
       await this.close();
 
       throw new AppError({
-        status: `CHECKPOINT`,
-        message: `Checkpoint required.`,
+        status: `FAILED`,
+        message: `Login has not succeeded.`,
       });
     }
 
@@ -371,6 +371,7 @@ export default class Instagram extends Utils {
 
     await this.page.type('input[name="username"]', username, { delay: 50 });
     await this.page.type('input[name="password"]', password, { delay: 50 });
+
     await this.sleep(500);
     await this.page.click('#loginForm [type="submit"]', { delay: 50 });
 
