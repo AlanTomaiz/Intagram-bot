@@ -28,111 +28,102 @@ export default class HandleFollows {
       );
     }
 
-    wss.to(socket_id).emit('block_follow');
-    // const { total_ref, account_user: userToFollow, block_following } = findUser;
+    const { total_ref, account_user: userToFollow, block_following } = findUser;
 
-    // const block_time = today.getTime();
-    // if (block_time <= block_following) {
-    //   wss.to(socket_id).emit('block_following');
+    const block_time = today.getTime();
+    if (block_time <= block_following) {
+      wss.to(socket_id).emit('block_following');
 
-    //   throw new AppError(
-    //     `Você deve aguardar 30min antes de solicitar novos seguidores.`,
-    //   );
-    // }
+      throw new AppError(
+        `Você deve aguardar 30min antes de solicitar novos seguidores.`,
+      );
+    }
 
-    // await repository.save({
-    //   _id: findUser._id,
-    //   block_following: block_time + 60000 * 30,
-    //   updated_at: new Date(),
-    // });
+    await repository.save({
+      _id: findUser._id,
+      block_following: block_time + 60000 * 30,
+      updated_at: new Date(),
+    });
 
-    // let follows = 0;
-    // const totalFollows = total_ref + 10;
+    let follows = 0;
+    const totalFollows = total_ref + 10;
 
-    // (async function loop() {
-    //   if (follows < totalFollows) {
-    //     console.log('');
-    //     logger.info('Start Follow action...');
+    (async function loop() {
+      if (follows < totalFollows) {
+        console.log('');
+        logger.info('Start Follow action.');
 
-    //     const user = await repository.getRandomUser(user_id);
+        const user = await repository.getRandomUser(user_id);
 
-    //     if (!user) {
-    //       logger.info('User not found!!!');
-    //       wss.to(socket_id).emit('block_follow');
-    //       return;
-    //     }
+        if (!user) {
+          logger.info('User not found!!!');
+          wss.to(socket_id).emit('block_follow');
+          return;
+        }
 
-    //     const { _id, account_user: username, account_pass: password } = user;
-    //     const credentials = { username, password };
+        const { _id, account_user: username, account_pass: password } = user;
+        const credentials = { username, password };
 
-    //     const nextUseTime = today.getTime() + 60000 * 10;
-    //     const updateUser = {
-    //       _id,
-    //       next_use: nextUseTime,
-    //       updated_at: new Date(),
-    //     };
+        const nextUseTime = today.getTime() + 60000 * 10;
+        const updateUser = {
+          _id,
+          next_use: nextUseTime,
+          updated_at: new Date(),
+        };
 
-    //     await repository.save({ ...updateUser });
+        await repository.save({ ...updateUser });
 
-    //     try {
-    //       const port = await getRandomPort();
-    //       const { browser, page } = await create({
-    //         username,
-    //         proxy_port: port,
-    //       });
+        try {
+          const port = await getRandomPort();
+          const browser = await create({ username, proxy_port: port });
 
-    //       const client = new Instagram({ browser, page, credentials });
-    //       await client.follow(userToFollow);
+          const client = new Instagram({ browser, credentials });
+          await client.followUser(userToFollow);
 
-    //       follows++;
-    //       wss.to(socket_id).emit('new_follow', follows);
+          follows++;
+          wss.to(socket_id).emit('new_follow', follows);
 
-    //       // Block future re-follow
-    //       await manager.query(`INSERT INTO follow_ref(follow, userid)
-    //       VALUES (${user_id}, ${user.instaid});`);
+          // Block future re-follow
+          await manager.query(`INSERT INTO follow_ref(follow, userid)
+          VALUES (${user_id}, ${user.instaid});`);
+        } catch (err: any) {
+          const error_message =
+            err.data?.message || err.data || err.message || err;
 
-    //       logger.info('New follow.');
-    //     } catch (err: any) {
-    //       const error_message =
-    //         err.data?.message || err.data || err.message || err;
+          if (error_message === 'BLOCK') {
+            const nextTime = new Date();
+            nextTime.setDate(today.getDate() + 8);
 
-    //       if (error_message === 'block') {
-    //         const nextTime = new Date();
-    //         nextTime.setDate(today.getDate() + 8);
+            const update = {
+              _id,
+              status: 5,
+              next_use: nextTime.getTime(),
+              updated_at: new Date(),
+            };
 
-    //         const update = {
-    //           _id,
-    //           status: 5,
-    //           next_use: nextTime.getTime(),
-    //           updated_at: new Date(),
-    //         };
+            await repository.save({ ...update });
+          }
 
-    //         await repository.save({ ...update });
-    //       }
+          if (error_message === 'FOLLOWER') {
+            await manager.query(`INSERT INTO follow_ref(follow, userid)
+            VALUES (${user_id}, ${user.instaid});`);
+          }
 
-    //       if (error_message === 'FOLLOWER') {
-    //         await manager.query(`INSERT INTO follow_ref(follow, userid)
-    //         VALUES (${user_id}, ${user.instaid});`);
-    //       }
+          if (error_message === 'DISCONNECTED') {
+            const update = {
+              _id,
+              status: 3,
+              updated_at: new Date(),
+            };
 
-    //       if (
-    //         error_message === 'DISCONNECTED' ||
-    //         error_message === 'CHECKPOINT'
-    //       ) {
-    //         const update = {
-    //           _id,
-    //           status: 3,
-    //           updated_at: new Date(),
-    //         };
+            await repository.save({ ...update });
+          }
 
-    //         await repository.save({ ...update });
-    //       }
+          logger.error(`Error on loop: ${error_message}`);
+        }
 
-    //       logger.info(`Error on loop: ${error_message}`);
-    //     }
-
-    //     loop();
-    //   }
-    // })();
+        loop();
+      }
+    })();
   }
 }

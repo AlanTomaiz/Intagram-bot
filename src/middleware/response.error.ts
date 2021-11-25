@@ -9,7 +9,9 @@ const HandleError = (
   res: Response,
   _: NextFunction,
 ) => {
-  console.log('error server:', err);
+  // @ts-expect-error erro de type
+  const error_message = err.data?.message || err.data || err.message || err;
+  console.log('error server:', error_message);
 
   if (err instanceof RequestError) {
     const message =

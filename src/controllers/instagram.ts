@@ -113,6 +113,102 @@ export default class Instagram extends Utils {
     }
   }
 
+  async findFollowButton() {
+    const elementHandles = await this.page.$x(
+      "//header//button[text()='Follow']",
+    );
+
+    if (elementHandles.length > 0) return elementHandles[0];
+
+    const elementHandles2 = await this.page.$x(
+      "//header//button[text()='Follow Back']",
+    );
+
+    if (elementHandles2.length > 0) return elementHandles2[0];
+
+    return undefined;
+  }
+
+  async findUnfollowButton() {
+    const elementHandles = await this.page.$x(
+      "//header//button[text()='Following']",
+    );
+
+    if (elementHandles.length > 0) return elementHandles[0];
+
+    const elementHandles2 = await this.page.$x(
+      "//header//button[text()='Requested']",
+    );
+
+    if (elementHandles2.length > 0) return elementHandles2[0];
+
+    const elementHandles3 = await this.page.$x(
+      "//header//button[*//span[@aria-label='Following']]",
+    );
+
+    if (elementHandles3.length > 0) return elementHandles3[0];
+
+    return undefined;
+  }
+
+  async checkActionBlocked() {
+    const box1 = await this.page.$x('//*[contains(text(), "Action Blocked")]');
+    const box2 = await this.page.$x('//*[contains(text(), "Try Again Later")]');
+
+    if (box1.length > 0 || box2.length > 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  async followUser(username: string) {
+    if (!(await this.isLoggedIn())) {
+      await this.page.screenshot({
+        path: `temp/page-erro-disconect-${new Date().getTime()}.png`,
+      });
+
+      await this.close();
+      throw new Error('DISCONNECTED');
+    }
+
+    await this.navigateToUser(username);
+    const elementHandle2 = await this.findUnfollowButton();
+
+    if (elementHandle2) {
+      await this.page.screenshot({
+        path: `temp/page-erro-follower-${new Date().getTime()}.png`,
+      });
+
+      await this.close();
+      throw new Error('FOLLOWER');
+    }
+
+    const elementHandle = await this.findFollowButton();
+    if (!elementHandle) {
+      await this.page.screenshot({
+        path: `temp/page-erro-button-${new Date().getTime()}.png`,
+      });
+
+      await this.close();
+      throw new Error('Follow button not found');
+    }
+
+    logger.log(`Following user ${username}`);
+
+    await elementHandle.click();
+    await this.sleep(5000);
+
+    if (await this.checkActionBlocked()) {
+      await this.page.screenshot({
+        path: `temp/page-erro-block-${new Date().getTime()}.png`,
+      });
+
+      await this.close();
+      throw new Error('BLOCK');
+    }
+  }
+
   async verifyUserInterface() {
     const { username, password } = this.credentials;
 
@@ -168,7 +264,7 @@ export default class Instagram extends Utils {
       )
       .then(response => response.json())
       .catch(async err => {
-        console.log('err waitForLogin', err);
+        logger.warn(`err waitForLogin: ${err.message}`);
 
         await this.close();
         throw new Error('TIMEOU');
@@ -360,7 +456,6 @@ export default class Instagram extends Utils {
     try {
       await this.page.waitForSelector('input[name="username"]');
     } catch (err) {
-      console.log('err tryLogin?', err);
       await this.close();
 
       throw new AppError({
