@@ -194,7 +194,7 @@ export default class Instagram extends Utils {
       throw new Error('Follow button not found');
     }
 
-    logger.log(`Following user ${username}`);
+    logger.info(`Following user ${username}`);
 
     await elementHandle.click();
     await this.sleep(5000);
