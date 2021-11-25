@@ -61,7 +61,7 @@ export default class Instagram extends Utils {
     }
 
     if (status === 404) {
-      logger.log('User not found');
+      logger.info('User not found');
       return false;
     }
 
