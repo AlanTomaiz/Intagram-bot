@@ -11,7 +11,7 @@ import './database';
 import { logger } from './utils/logger';
 import HandleError from './middleware/response.error';
 import InstaRoutes from './routes/insta';
-import { generatePorts } from './utils/handlePorts';
+import { generatePorts, killProcessChrome } from './utils/handlePorts';
 
 const app = express();
 const PORT = 3333;
@@ -45,6 +45,7 @@ async function init() {
   setTimeout(async () => {
     logger.info('Squid reloading...');
     await generatePorts();
+    await killProcessChrome();
   }, 60000 * 60 * 3);
 
   server.listen(PORT, () => logger.info(`# Server start on port: ${PORT}`));

@@ -4,8 +4,6 @@ import phpRunner from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
-import Sleep from './sleep';
-
 const tempPath = path.resolve(__dirname, '..', '..', 'temp');
 
 async function removeIps() {
@@ -71,4 +69,10 @@ export async function getRandomPort() {
 
   const lines = dataFile.split('\n');
   return Number(lines[Math.floor(Math.random() * lines.length)]);
+}
+
+export async function killProcessChrome() {
+  const execPHP = promisify(phpRunner.exec);
+
+  await execPHP('php script.php killProcessChrome');
 }

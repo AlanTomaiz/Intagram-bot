@@ -35,6 +35,10 @@ function reloadSquid() {
   sleep(1);
 }
 
+function killProcessChrome() {
+  shell_exec("sudo killall 'chrome'");
+}
+
 // nodejs
 $args = explode(',', $argv[1]);
 ($args[0])($args[1]);
