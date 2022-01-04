@@ -281,6 +281,7 @@ export default class Instagram extends Utils {
     } = request;
 
     if (spam || request === 'TIMEOUT') {
+      console.log(request);
       await this.close();
 
       throw new AppError({
