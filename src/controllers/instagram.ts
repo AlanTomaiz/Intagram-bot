@@ -1,11 +1,11 @@
 /* eslint no-restricted-globals: "off", no-empty: "off" */
-import { ElementHandle, Browser, Page } from 'puppeteer';
+import { Browser, ElementHandle, Page } from 'puppeteer';
 
-import Utils from './utils';
+import { Credentials, InstagramProps } from '../config/types';
 import AppError from '../errors/app-error';
 import { logger } from '../utils/logger';
-import { Credentials, InstagramProps } from '../config/types';
-import { tryDeleteCookies, trySaveCookies, trySendCookies } from './auth';
+import { tryDeleteCookies, trySaveCookies } from './auth';
+import Utils from './utils';
 
 export default class Instagram extends Utils {
   browser: Browser;
@@ -246,12 +246,6 @@ export default class Instagram extends Utils {
     );
 
     await trySaveCookies(this.page, username);
-
-    await trySendCookies({
-      page: this.page,
-      user: username,
-      pass: password,
-    });
   }
 
   async waitForLogin() {

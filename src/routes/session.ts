@@ -1,8 +1,7 @@
 import { Router } from 'express';
 
-import HandleLogin from '../services/HandleLogin';
-import HandleRelogin from '../services/HandleRelogin';
 import HandleCheckpoint from '../services/HandleCheckpoint';
+import HandleLogin from '../services/HandleLogin';
 
 const SessionRoutes = Router();
 
@@ -22,13 +21,6 @@ SessionRoutes.post('/checkpoint/', async (request, response) => {
   const { user, token } = await service.run({ username, password, code });
 
   return response.json({ status: 'success', user, token });
-});
-
-SessionRoutes.get('/relogin/', async (request, response) => {
-  const service = new HandleRelogin();
-  service.run();
-
-  return response.json({ status: 'success' });
 });
 
 export default SessionRoutes;
